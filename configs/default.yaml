@@ -1,0 +1,47 @@
+# Default experiment configuration. Per-experiment configs override these.
+seed: 0
+
+cohort:
+  source: sigbm
+  start_month: "2015-01"
+  end_month: null   # null = present
+
+outcome:
+  database: wmtf
+  severity_min: 4
+  horizon_months: 12
+
+features:
+  static: true
+  insar:
+    enabled: true
+    insar_window_months: 12
+    tracks: [ascending, descending]
+  climate:
+    enabled: true
+    rainfall_windows_days: [30, 90, 365]
+    indices: [spi3, spi6, api]
+  ops:
+    enabled: true
+
+model:
+  primary: tabpfn
+  baselines: [base_rate, construction_rate, anm_cri, lightgbm]
+  multitask_by_construction: true
+  calibration:
+    temperature_scaling: true
+    conformal: split
+    alpha: 0.1
+
+validation:
+  protocol: rolling_origin
+  step_months: 3
+  held_out_failures: [fundao_2015, b1_brumadinho_2019]
+  operator_out_cv: true
+  bootstrap_resamples: 1000
+
+paths:
+  data_raw: data/raw
+  data_interim: data/interim
+  data_processed: data/processed
+  results: results
