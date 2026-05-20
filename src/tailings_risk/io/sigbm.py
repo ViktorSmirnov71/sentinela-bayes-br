@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 SIGBM_BD_TABLE = "basedosdados.br_anm_sigbm.barragens"
 
 

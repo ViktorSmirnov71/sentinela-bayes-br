@@ -15,7 +15,7 @@ def expected_calibration_error(y_true: np.ndarray, y_prob: np.ndarray, n_bins: i
     edges = np.linspace(0.0, 1.0, n_bins + 1)
     ece = 0.0
     n = len(y_true)
-    for lo, hi in zip(edges[:-1], edges[1:]):
+    for lo, hi in zip(edges[:-1], edges[1:], strict=False):
         mask = (y_prob > lo) & (y_prob <= hi)
         if mask.sum() == 0:
             continue
@@ -47,7 +47,7 @@ def brier_decomposition(y_true: np.ndarray, y_prob: np.ndarray, n_bins: int = 15
     edges = np.linspace(0.0, 1.0, n_bins + 1)
     rel, res = 0.0, 0.0
     n = len(y_true)
-    for lo, hi in zip(edges[:-1], edges[1:]):
+    for lo, hi in zip(edges[:-1], edges[1:], strict=False):
         mask = (y_prob > lo) & (y_prob <= hi)
         if mask.sum() == 0:
             continue
