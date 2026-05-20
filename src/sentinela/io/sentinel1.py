@@ -5,7 +5,7 @@ dam centroid. The full ISCE2 + MintPy path is reserved for the retrospective
 Fundão / B1 reanalyses where time-series quality matters most.
 
 Functions here orchestrate requests; the heavy lifting lives in
-src/tailings_risk/insar/.
+src/sentinela/insar/.
 """
 from __future__ import annotations
 

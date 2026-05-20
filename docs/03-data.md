@@ -202,5 +202,5 @@ E. Reference / cross-validation datasets
 
 `data/raw/` and `data/interim/` and `data/processed/` are gitignored.
 Provenance for every materialised file is recorded in `data/MANIFEST.csv`
-(produced by the loaders in `src/tailings_risk/io/`). No raw data is committed
+(produced by the loaders in `src/sentinela/io/`). No raw data is committed
 to the repository.

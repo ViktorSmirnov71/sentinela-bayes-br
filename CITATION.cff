@@ -1,11 +1,11 @@
 cff-version: 1.2.0
-title: "tailings-risk: per-dam probabilistic failure modelling for Brazilian tailings storage facilities"
+title: "Sentinela: Bayesian Failure Forecasting for Brazilian Tailings Dams"
 message: "If you use this software, please cite as below."
 type: software
 authors:
   - family-names: Smirnov
     given-names: Viktor
-repository-code: ""
+repository-code: "https://github.com/ViktorSmirnov71/sentinela-bayes-br"
 license: MIT
 version: 0.0.1
 date-released: 2026-05-20

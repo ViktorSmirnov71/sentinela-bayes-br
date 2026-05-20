@@ -1,15 +1,15 @@
 """Single entry point exposing project commands.
 
 Usage:
-    tailings-risk pull sigbm
-    tailings-risk pull wmtf
-    tailings-risk run experiments/01_insar_ablation/config.yaml
+    sentinela pull sigbm
+    sentinela pull wmtf
+    sentinela run experiments/01_insar_ablation/config.yaml
 """
 from __future__ import annotations
 
 import typer
 
-app = typer.Typer(no_args_is_help=True, help="tailings-risk command-line interface.")
+app = typer.Typer(no_args_is_help=True, help="Sentinela command-line interface.")
 
 
 @app.command()

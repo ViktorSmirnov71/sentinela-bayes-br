@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from tailings_risk.evaluation.metrics import (
+from sentinela.evaluation.metrics import (
     brier_decomposition,
     expected_calibration_error,
 )

@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tailings-risk"
+name = "sentinela-bayes-br"
 version = "0.0.1"
-description = "Per-dam probabilistic failure-risk modelling for Brazilian mine-tailings storage facilities."
+description = "Sentinela: Bayesian Failure Forecasting for Brazilian Tailings Dams."
 requires-python = ">=3.10"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -55,7 +55,7 @@ insar = [
 ]
 
 [project.scripts]
-tailings-risk = "tailings_risk.cli:app"
+sentinela = "sentinela.cli:app"
 
 [tool.setuptools.packages.find]
 where = ["src"]

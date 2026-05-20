@@ -8,6 +8,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Changed (2026-05-20)
+- Project renamed from `tailings-risk` to `sentinela-bayes-br`; full title
+  "Sentinela: Bayesian Failure Forecasting for Brazilian Tailings Dams". Python
+  package renamed `tailings_risk` → `sentinela`; CLI entry point `sentinela`.
+  Repository moved to `github.com/ViktorSmirnov71/sentinela-bayes-br`.
+- README rewritten with an Introduction + Context section explaining the
+  problem in plain terms before bridging to the methodology.
+
 ### Added
 - Initial scientific scaffolding: 7 documents under `docs/` (overview, problem
   statement, related work, data audit, methods, research questions, ethics),
