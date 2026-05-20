@@ -8,6 +8,26 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-20, second push)
+- `data/external/brazilian_failures.csv` (committed): citation-anchored table
+  of eight Brazilian mining-related dam-failure events (1986-2022), used as
+  primary positive-class labels until the full WMTF spreadsheet is wired.
+- `src/sentinela/io/fixtures.py`: representative synthetic SIGBM table
+  generator with real-marginal weights (state, ore, construction method) and
+  two reference-failure stand-in rows (`FIX-REF-FUNDAO`, `FIX-REF-B1`).
+- `src/sentinela/io/sigbm.py`: real loader with canonicalisation, validation,
+  and Base-dos-Dados / manual-export access paths documented.
+- `src/sentinela/io/wmtf.py`: loader for the curated Brazilian failures CSV
+  (full WMTF spreadsheet support stubbed for later).
+- `src/sentinela/features/build.py`: cohort × month panel builder with
+  horizon-windowed binary labels and right-censoring weights.
+- `src/sentinela/utils/seed.py`: deterministic-seeding helper.
+- `experiments/00_baselines/`: end-to-end pipeline smoke run producing real
+  metrics from fixture or real SIGBM data. First successful run reports
+  B1 (construction-stratified) AUROC ≈ 0.88 against the fixture cohort.
+- Tests covering schema canonicalisation, fixture reference dams, label
+  attachment, and censoring weights.
+
 ### Changed (2026-05-20)
 - Project renamed from `tailings-risk` to `sentinela-bayes-br`; full title
   "Sentinela: Bayesian Failure Forecasting for Brazilian Tailings Dams". Python

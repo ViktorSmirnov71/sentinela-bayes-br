@@ -1,0 +1,13 @@
+seed: 0
+cohort:
+  start_month: "2018-01"
+  end_month: "2025-12"
+outcome:
+  severity_min: 4
+  horizon_months: 12
+model:
+  primary: null   # this experiment runs only baselines
+  baselines: [base_rate, construction_rate, anm_cri]
+fixture:
+  use_fixture_if_no_real_sigbm: true
+  n_dams: 120
