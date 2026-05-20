@@ -1,5 +1,13 @@
 # tailings-risk
 
+![status](https://img.shields.io/badge/status-pre--pilot-orange)
+![license](https://img.shields.io/badge/license-MIT-blue)
+![python](https://img.shields.io/badge/python-3.10%2B-blue)
+
+> **Status — pre-pilot.** Methodology and research questions are pre-registered
+> in `docs/`. No results yet. The first commit timestamp is the pre-registration
+> reference; subsequent material changes are dated in `CHANGELOG.md`.
+
 Calibrated, per-dam failure-risk modelling for Brazilian mine-tailings storage
 facilities. Combines the public ANM/SIGBM registry, Sentinel-1 InSAR ground-
 deformation time series, INMET extreme-rainfall records, satellite indices,
