@@ -9,7 +9,7 @@
 > reference; subsequent material changes are dated in `CHANGELOG.md`.
 
 > **Patronage.** Sentinela is pro bono work conducted on behalf of
-> [Arakon](https://arakon.ai) as a theoretical thought experiment on rapid
+> [Arakon](https://arakon.co.uk) as a theoretical thought experiment on rapid
 > machine-learning model deployment for high-stakes infrastructure decisions.
 > It is research, not product: the goal is to characterise what is and is not
 > possible with a small, carefully chosen open-data pipeline and a modern
