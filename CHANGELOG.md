@@ -8,6 +8,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, third push)
+- `data/` reorganised into a self-contained, reproducible data layer:
+  - `data/README.md` is the new navigation key with a tree diagram, pipeline
+    flow chart, and provenance table for every file.
+  - `data/scripts/clean_sigbm.py` and `data/scripts/build_cohort.py` are
+    runnable entry points around the package; both deterministic.
+  - `data/processed/sigbm_canonical.parquet` (67 KB) and
+    `data/processed/cohort_panel.parquet` (51 KB) committed as the model-
+    ready artefacts. Reproducible byte-for-byte from a clean clone via the
+    two scripts.
+  - `data/raw/sigbm/Relatorio_20260721.csv` (254 KB) committed as the
+    published baseline snapshot.
+  - Per-folder READMEs under `data/raw/`, `data/processed/`, and
+    `data/scripts/` documenting roles, schema, and regeneration commands.
+- `.gitignore` rewritten with file-level globs so specific data artefacts can
+  be exempted from the local-only default. Documented inline.
+
 ### Added (2026-05-21)
 - Real SIGBM data ingest path verified end-to-end. `Relatorio_20260721.csv`
   (911 dams, manual export from `app.anm.gov.br/sigbm/publico`) loads cleanly.

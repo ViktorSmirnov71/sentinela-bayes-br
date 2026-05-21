@@ -6,13 +6,31 @@ __pycache__/
 build/
 dist/
 
-# Data — never committed. Provenance lives in docs/03-data.md and data/MANIFEST.csv.
-data/raw/
-data/interim/
-data/processed/
+# Data
+# Default: raw/interim/processed are local-only. We then re-allow specific
+# small files that are integral to the published research artefact so the
+# repository is reproducible from a clean clone. We use file-level globs
+# (not directory excludes) so the re-includes below can take effect; git
+# does not honour `!path/to/file` if a parent dir was excluded by `dir/`.
+data/raw/*
+data/raw/**/*
+data/interim/*
+data/processed/*
+
+# Allow folder anchors and per-folder READMEs.
 !data/raw/.gitkeep
+!data/raw/README.md
 !data/interim/.gitkeep
 !data/processed/.gitkeep
+!data/processed/README.md
+
+# Permit the committed SIGBM snapshot used by the published baselines.
+!data/raw/sigbm/
+!data/raw/sigbm/Relatorio_20260721.csv
+
+# Permit the cleaned outputs produced by data/scripts/*.py.
+!data/processed/sigbm_canonical.parquet
+!data/processed/cohort_panel.parquet
 
 # Results / outputs
 results/
