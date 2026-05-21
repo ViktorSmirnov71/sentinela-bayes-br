@@ -130,6 +130,28 @@ def search_scenes(
     return sorted(out, key=lambda s: s.start_time)
 
 
+def pick_best_orbit(
+    bbox: tuple[float, float, float, float],
+    start: str,
+    end: str,
+) -> tuple[str, int]:
+    """Return the orbit ("ASCENDING" or "DESCENDING") with more SLC coverage.
+
+    Necessary because the Sentinel-1 ascending/descending coverage pattern
+    over Brazil is uneven, especially in the early-mission years
+    (2014-2016) when much of Minas Gerais was descending-only. Calling this
+    before scene search ensures we don't silently submit a zero-scene job.
+
+    Returns (orbit_name, scene_count). Ties go to DESCENDING because for the
+    motivating dam (Mariana) descending coverage is the primary orbit.
+    """
+    asc = len(search_scenes(bbox, start, end, orbit="ASCENDING"))
+    desc = len(search_scenes(bbox, start, end, orbit="DESCENDING"))
+    if desc >= asc:
+        return ("DESCENDING", desc)
+    return ("ASCENDING", asc)
+
+
 def short_baseline_pairs(
     scenes: list[Scene], n_temporal_neighbors: int = 3
 ) -> list[tuple[Scene, Scene]]:

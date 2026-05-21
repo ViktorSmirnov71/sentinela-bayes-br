@@ -8,6 +8,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Changed (2026-05-21, fifth push)
+- `sentinela.io.sentinel1.pick_best_orbit` added. Searches both ASCENDING and
+  DESCENDING for a given bbox and time window, returns whichever has more
+  Sentinel-1 SLC coverage. Needed because the early-mission (2014-2016)
+  coverage over Brazil is uneven — Minas Gerais is DESCENDING-only for the
+  Fundão 2014-10 to 2015-11 precursor window, which the previous
+  ASCENDING default would have silently submitted as a zero-scene job.
+- `data/scripts/build_insar_features.py pull` default for `--orbit` is now
+  `auto`. The explicit `ASCENDING` / `DESCENDING` overrides remain available.
+
 ### Added (2026-05-21, fourth push — InSAR pipeline)
 - Real implementations of the Sentinel-1 InSAR precursor feature extractors
   in `src/sentinela/insar/features.py`:

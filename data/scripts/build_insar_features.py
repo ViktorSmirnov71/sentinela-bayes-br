@@ -45,6 +45,7 @@ def cmd_pull(args: argparse.Namespace) -> int:
     """Search ASF and submit HyP3 jobs for the listed dams."""
     from sentinela.io.sentinel1 import (
         bbox_for_dam,
+        pick_best_orbit,
         search_scenes,
         short_baseline_pairs,
         submit_insar_pairs,
@@ -61,8 +62,14 @@ def cmd_pull(args: argparse.Namespace) -> int:
         bbox = bbox_for_dam(dam["lat"], dam["lon"], radius_km=args.radius_km)
         print(f"\n== dam {dam['dam_id']} ({dam['name']}) ==")
         print(f"  bbox: {bbox}")
-        scenes = search_scenes(bbox, args.start, args.end, orbit=args.orbit)
-        print(f"  {len(scenes)} S1 scenes in window")
+        if args.orbit == "auto":
+            orbit, count = pick_best_orbit(bbox, args.start, args.end)
+            print(f"  orbit auto-selected: {orbit} ({count} scenes; "
+                  f"the other orbit was the lesser-covered alternative)")
+        else:
+            orbit = args.orbit
+        scenes = search_scenes(bbox, args.start, args.end, orbit=orbit)
+        print(f"  {len(scenes)} S1 scenes in window ({orbit})")
         pairs = short_baseline_pairs(scenes, n_temporal_neighbors=args.neighbors)
         print(f"  {len(pairs)} SBAS pairs to submit")
         if args.dry_run:
@@ -129,7 +136,13 @@ def main() -> int:
     p_pull.add_argument("--dam-ids", nargs="+", required=True)
     p_pull.add_argument("--start", default="2014-01-01")
     p_pull.add_argument("--end", default="2025-12-31")
-    p_pull.add_argument("--orbit", choices=("ASCENDING", "DESCENDING"), default="ASCENDING")
+    p_pull.add_argument(
+        "--orbit",
+        choices=("auto", "ASCENDING", "DESCENDING"),
+        default="auto",
+        help="Sentinel-1 orbit. 'auto' picks the better-covered orbit per dam "
+             "(default; recommended). 'ASCENDING' / 'DESCENDING' force a choice.",
+    )
     p_pull.add_argument("--radius-km", type=float, default=5.0)
     p_pull.add_argument("--neighbors", type=int, default=3)
     p_pull.add_argument("--dry-run", action="store_true",
