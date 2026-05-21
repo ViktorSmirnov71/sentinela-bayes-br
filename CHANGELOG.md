@@ -8,6 +8,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, eighth push — 3D terrain mesh)
+- `data/scripts/build_terrain.py`: fetches AWS Open Data terrarium-format
+  tiles, decodes RGB to elevation, clips to Brazil bbox, downsamples to
+  320 x 280, writes `viz/data/terrain.json` (~386 KB).
+- `data/scripts/export_viz_data.py` now bilinear-samples the DEM at each
+  dam's lat/lon and writes `terrain_elevation_m` into `dams.json`. Barragem
+  de Germano correctly resolves at ~803 m elevation in Mariana, MG.
+- `viz/js/main.js` rewritten: flat plane replaced by a 3D PlaneGeometry
+  mesh with elevation-displaced vertices, faceted low-poly material with
+  per-vertex elevation-tinted colour, semi-transparent wireframe overlay,
+  Brazil coastline traced along the terrain surface, and dam spikes
+  positioned at their actual terrain elevation. Vertical exaggeration
+  ~70x for country-scale legibility. Cone-shaped spikes replace cylinder
+  pillars to emphasise the eruption-from-ground visual.
+
 ### Added (2026-05-21, seventh push — research release)
 - `src/sentinela/models/hierarchical.py`: three-level hierarchical Bayesian
   failure-risk model. Level 1 = Beta-Binomial construction-method posterior.
