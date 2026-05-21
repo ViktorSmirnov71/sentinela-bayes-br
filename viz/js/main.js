@@ -71,11 +71,14 @@ const app = document.getElementById("app");
 const tooltip = document.getElementById("tooltip");
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xf4f6f9);
-scene.fog = new THREE.FogExp2(0xf4f6f9, 0.0055);
+// Background is set by the gradient-sky sphere below. Fog fades distant
+// terrain into the *ocean* colour (cool pale blue) rather than into the
+// page background, so the country has a real horizon to sit against.
+const OCEAN_COLOUR = new THREE.Color(0xc4d4e2);
+scene.fog = new THREE.Fog(OCEAN_COLOUR, 180, 420);
 
 const camera = new THREE.PerspectiveCamera(
-  42, window.innerWidth / window.innerHeight, 0.1, 1200
+  42, window.innerWidth / window.innerHeight, 0.1, 2400
 );
 camera.position.set(70, 90, 140);
 
@@ -94,6 +97,63 @@ composer.addPass(new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   /* strength */ 0.45, /* radius */ 0.5, /* threshold */ 0.7
 ));
+
+// ---------- sky backdrop (vertical gradient sphere) ----------
+// Renders inside-out so the camera always sees a smooth gradient at the
+// horizon. Warm cream at the bottom (where it meets the ocean) blends into
+// cool pale blue overhead.
+{
+  const skyGeo = new THREE.SphereGeometry(900, 32, 16);
+  const skyMat = new THREE.ShaderMaterial({
+    uniforms: {
+      topColor:    { value: new THREE.Color(0xc8d6e3) },
+      bottomColor: { value: new THREE.Color(0xf3ede0) },
+      offset:      { value: 30 },
+      exponent:    { value: 0.45 },
+    },
+    vertexShader: `
+      varying vec3 vWorldPosition;
+      void main() {
+        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+        vWorldPosition = worldPosition.xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 topColor;
+      uniform vec3 bottomColor;
+      uniform float offset;
+      uniform float exponent;
+      varying vec3 vWorldPosition;
+      void main() {
+        float h = normalize(vWorldPosition + vec3(0.0, offset, 0.0)).y;
+        float t = max(pow(max(h, 0.0), exponent), 0.0);
+        gl_FragColor = vec4(mix(bottomColor, topColor, t), 1.0);
+      }
+    `,
+    side: THREE.BackSide,
+    depthWrite: false,
+  });
+  const sky = new THREE.Mesh(skyGeo, skyMat);
+  scene.add(sky);
+}
+
+// ---------- ocean / surrounding plane ----------
+// Extends well past Brazil's bbox so the country reads as land surrounded
+// by sea; receives the same fog so far edges fade into the horizon.
+{
+  const oceanGeo = new THREE.PlaneGeometry(1800, 1800);
+  oceanGeo.rotateX(-Math.PI / 2);
+  const oceanMat = new THREE.MeshStandardMaterial({
+    color: OCEAN_COLOUR,
+    metalness: 0.0,
+    roughness: 1.0,
+    fog: true,
+  });
+  const ocean = new THREE.Mesh(oceanGeo, oceanMat);
+  ocean.position.y = -0.05;
+  scene.add(ocean);
+}
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -177,19 +237,15 @@ const wireMesh = new THREE.Mesh(wireGeo, wireMat);
 wireMesh.position.y = 0.05;
 scene.add(wireMesh);
 
-// Ground-level reference grid — a 1° lat/lon spacing in the world plane,
-// at y = 0, so even from a steep top-down angle there is a clean cartographic
-// reference under the terrain.
+// Ground-level reference grid covering the Brazil bbox only. Floats just
+// above the ocean plane so it reads as a graticule on the sea, not on the
+// terrain.
 {
   const gridSize = Math.max(PLANE_W, PLANE_H);
-  const grid = new THREE.GridHelper(
-    gridSize, 45,           // 45 divisions ≈ 1° spacing along the long axis
-    0x9aa6b4,               // major-axis colour
-    0xc6cdd5,               // minor-axis colour
-  );
+  const grid = new THREE.GridHelper(gridSize, 45, 0x8a98a8, 0xb5bec8);
   grid.material.transparent = true;
-  grid.material.opacity = 0.45;
-  grid.position.y = -0.01;
+  grid.material.opacity = 0.35;
+  grid.position.y = 0.02;   // just above the ocean (-0.05) but below terrain
   scene.add(grid);
 }
 
