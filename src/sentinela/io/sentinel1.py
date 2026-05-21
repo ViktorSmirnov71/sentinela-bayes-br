@@ -141,8 +141,12 @@ def search_scenes(
         geom = r.geometry["coordinates"][0]
         lons = [p[0] for p in geom]
         lats = [p[1] for p in geom]
+        # HyP3 expects the bare scene name (e.g. S1A_IW_SLC__1SDV_...) without
+        # the "-SLC" suffix that asf_search appends to `fileID`. `sceneName` is
+        # the canonical bare identifier.
+        granule = props.get("sceneName") or props["fileID"].removesuffix("-SLC")
         out.append(Scene(
-            granule=props["fileID"],
+            granule=granule,
             track=int(props.get("pathNumber", 0)),
             orbit=props.get("flightDirection", "").upper(),
             start_time=datetime.fromisoformat(props["startTime"].replace("Z", "+00:00")),
