@@ -82,6 +82,33 @@ def cmd_pull(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_status(args: argparse.Namespace) -> int:
+    """Report HyP3 batch status for one or more project names."""
+    from collections import Counter
+
+    import hyp3_sdk as sdk
+
+    hyp3 = sdk.HyP3()
+    project_names = args.project_names or [f"sentinela-{d}" for d in args.dam_ids]
+    for name in project_names:
+        batch = hyp3.find_jobs(name=name)
+        if not batch.jobs:
+            print(f"== {name}: no jobs found ==")
+            continue
+        print(f"== {name} ==")
+        print(f"  total:  {len(batch)}")
+        print(f"  {batch}")
+        breakdown = Counter(j.status_code for j in batch.jobs)
+        for status, n in sorted(breakdown.items()):
+            print(f"    {status:10s} {n}")
+        failed = [j for j in batch.jobs if j.status_code == "FAILED"]
+        if failed:
+            print("  FAILED jobs:")
+            for j in failed[:5]:
+                print(f"    {j.job_id} -- {j.processing_times}")
+    return 0
+
+
 def cmd_features(args: argparse.Namespace) -> int:
     """Extract per-dam features from local HyP3 products."""
     from sentinela.insar.features import TimeSeries, compute_features
@@ -148,6 +175,14 @@ def main() -> int:
     p_pull.add_argument("--dry-run", action="store_true",
                         help="search ASF but do not submit jobs")
     p_pull.set_defaults(func=cmd_pull)
+
+    p_stat = sub.add_parser("status", help="report HyP3 batch status by project name")
+    g = p_stat.add_mutually_exclusive_group(required=True)
+    g.add_argument("--dam-ids", nargs="+",
+                   help="dam IDs; project name will be 'sentinela-<dam_id>'")
+    g.add_argument("--project-names", nargs="+",
+                   help="explicit HyP3 project names")
+    p_stat.set_defaults(func=cmd_status)
 
     p_feat = sub.add_parser("features", help="extract features from local products")
     p_feat.set_defaults(func=cmd_features)
