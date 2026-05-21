@@ -110,20 +110,33 @@ def cmd_status(args: argparse.Namespace) -> int:
 
 
 def cmd_download(args: argparse.Namespace) -> int:
-    """Download succeeded HyP3 products into data/raw/insar/<dam_id>/.
+    """Download succeeded HyP3 products into data/raw/insar/<id>/.
 
     Files arrive as .zip per pair; we extract them so the *_unw_phase.tif
     rasters that the feature extractor consumes are present at the
     expected path.
+
+    Accepts either:
+      --dam-ids <id> ...    -> project name 'sentinela-<id>', local dir <id>
+      --project-name <name> -> arbitrary project; local dir = name without
+                               'sentinela-' prefix (or the name itself if no
+                               such prefix). Useful for ad-hoc submissions
+                               like the actual Fundão coordinates that are
+                               not in the SIGBM cohort.
     """
     import zipfile
     from collections import Counter
 
     import hyp3_sdk as sdk
 
+    if args.project_name:
+        targets = [(args.project_name,
+                    args.project_name.removeprefix("sentinela-"))]
+    else:
+        targets = [(f"sentinela-{d}", d) for d in args.dam_ids]
+
     hyp3 = sdk.HyP3()
-    for dam_id in args.dam_ids:
-        name = f"sentinela-{dam_id}"
+    for name, dir_id in targets:
         batch = hyp3.find_jobs(name=name)
         if not batch.jobs:
             print(f"== {name}: no jobs found ==")
@@ -135,13 +148,13 @@ def cmd_download(args: argparse.Namespace) -> int:
         if not ok:
             print("  no succeeded jobs to download yet")
             continue
-        dest = INSAR_RAW_DIR / dam_id
+        dest = INSAR_RAW_DIR / dir_id
         dest.mkdir(parents=True, exist_ok=True)
         print(f"  downloading {len(ok)} products into {dest.relative_to(REPO_ROOT)}")
         # Download each job's product zip; skip if already present.
         from tqdm import tqdm
 
-        for job in tqdm(ok, desc=f"  dam {dam_id}", unit="job"):
+        for job in tqdm(ok, desc=f"  {dir_id}", unit="job"):
             for path in job.download_files(location=dest, create=True):
                 if path.suffix == ".zip" and not args.no_unzip:
                     try:
@@ -157,12 +170,55 @@ def cmd_download(args: argparse.Namespace) -> int:
 
 
 def cmd_features(args: argparse.Namespace) -> int:
-    """Extract per-dam features from local HyP3 products."""
+    """Extract per-dam features from local HyP3 products.
+
+    Default: iterate every subdir of data/raw/insar/; match against SIGBM.
+    --target <id> --coords LAT LON  : single ad-hoc location (e.g. an actual
+        failed-dam coordinate that's no longer in SIGBM).
+    """
     from sentinela.insar.features import TimeSeries, compute_features
     from sentinela.insar.timeseries import build_los_timeseries, timeseries_to_arrays
 
-    sigbm = pd.read_parquet(SIGBM_CANONICAL)
     rows: list[dict] = []
+
+    if args.target and args.coords:
+        # Ad-hoc single-target path: bypass SIGBM lookup.
+        dam_lat, dam_lon = args.coords
+        products = INSAR_RAW_DIR / args.target
+        if not products.exists():
+            print(f"  {products.relative_to(REPO_ROOT)} not found")
+            return 1
+        ts = build_los_timeseries(products, dam_id=args.target,
+                                  dam_lat=dam_lat, dam_lon=dam_lon)
+        if ts.empty:
+            print(f"  no HyP3 products under {products.relative_to(REPO_ROOT)}")
+            return 1
+        td, los, stable = timeseries_to_arrays(ts)
+        feats = compute_features(TimeSeries(
+            times_days=td, los_mm=los, stable_reference_mm=stable,
+        ))
+        rows.append({
+            "dam_id": args.target,
+            "n_obs": len(ts),
+            "los_velocity_mm_yr": feats.los_velocity_mm_yr,
+            "los_accel_90d_mm_yr2": feats.los_accel_90d_mm_yr2,
+            "spectral_slope": feats.spectral_slope,
+            "crest_vs_stable_variance_ratio": feats.crest_vs_stable_variance_ratio,
+            "persistent_scatterer_density": feats.persistent_scatterer_density,
+            "coherence_p10": feats.coherence_p10,
+        })
+        # Ad-hoc target uses its own output file so it doesn't clobber the
+        # SIGBM-cohort parquet that experiment 01 reads.
+        out_path = INSAR_FEATURES_OUT.with_name(f"insar_features_{args.target}.parquet")
+        out = pd.DataFrame(rows)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out.to_parquet(out_path)
+        print(f"wrote {out_path.relative_to(REPO_ROOT)}")
+        print(out.T.to_string())
+        return 0
+
+    # Default path: SIGBM-cohort iteration.
+    sigbm = pd.read_parquet(SIGBM_CANONICAL)
     for products in sorted(INSAR_RAW_DIR.iterdir()) if INSAR_RAW_DIR.exists() else []:
         if not products.is_dir():
             continue
@@ -232,7 +288,12 @@ def main() -> int:
     p_stat.set_defaults(func=cmd_status)
 
     p_dl = sub.add_parser("download", help="download succeeded HyP3 products locally")
-    p_dl.add_argument("--dam-ids", nargs="+", required=True)
+    dl_grp = p_dl.add_mutually_exclusive_group(required=True)
+    dl_grp.add_argument("--dam-ids", nargs="+",
+                        help="dam IDs; project = 'sentinela-<id>', local dir = <id>")
+    dl_grp.add_argument("--project-name",
+                        help="explicit HyP3 project name; local dir = name without "
+                             "'sentinela-' prefix (for ad-hoc submissions)")
     p_dl.add_argument("--no-unzip", action="store_true",
                       help="keep .zip files instead of unpacking the *_unw_phase.tif")
     p_dl.add_argument("--cleanup-zip", action="store_true",
@@ -240,6 +301,11 @@ def main() -> int:
     p_dl.set_defaults(func=cmd_download)
 
     p_feat = sub.add_parser("features", help="extract features from local products")
+    p_feat.add_argument("--coords", nargs=2, type=float, metavar=("LAT", "LON"),
+                        help="for an ad-hoc directory under data/raw/insar/<id>/ that "
+                             "isn't a SIGBM dam, sample at this (lat, lon) instead.")
+    p_feat.add_argument("--target", help="single directory id to process "
+                                          "(default: every dir under data/raw/insar)")
     p_feat.set_defaults(func=cmd_features)
 
     args = parser.parse_args()

@@ -346,7 +346,58 @@ dam-month and the model assigns near-zero probability to the vast
 majority of rows. Substantive evaluation awaits more linked positives
 and the rolling-origin protocol.
 
-## 5.4 Visualisation
+## 5.4 Fundão retrospective: a partial-precursor finding
+
+We submitted a second HyP3 batch (42 SBAS pairs) at the actual Fundão
+dam coordinates (-20.193, -43.493) over 2014-10 to 2015-11, downloaded
+the 42 unwrapped-phase rasters, sampled the line-of-sight time series at
+the dam centroid and at a 3 km stable reference point, and ran the
+hierarchical model on a rolling 12-month trailing-feature window for
+every month from 2014-10 to 2015-11.
+
+Result, in full: ASF returned scenes only from June 2015 onward for this
+descending-orbit footprint (Sentinel-1's systematic acquisition over MG
+began later in this orbit cycle than over neighbouring scenes), so the
+trailing-window InSAR features are active only from 2015-06 onward. For
+the months 2014-10 to 2015-05 the model returns the engineering-features
+baseline of **0.75 %**, correctly elevated relative to the 0.01 % cohort
+mean. From 2015-06 onward the predicted risk oscillates between **0.17 %
+and 3.27 %** across consecutive months. The month containing the
+catastrophic failure (2015-11) carries a predicted risk of **0.96 %**,
+slightly above the engineering baseline but not a clean
+accelerating-toward-failure trajectory (`figures/fundao_retrospective.png`).
+
+The oscillation is informative about our InSAR sampling sophistication
+rather than about the underlying signal. Inspection of the raw time
+series shows that the dam-crest LOS values track the 3 km reference
+values to within ~1 mm — i.e. atmospheric and orbital common-mode
+signals dominate the differential, and the dam-specific motion in our
+crude median-pixel-buffer sampler is below the noise floor. The ~30 mm
+horizontal pre-failure deformation reported by @grebby2021 at Brumadinho
+(2019) was extracted via PS-InSAR with hundreds of reference points and
+explicit atmospheric correction; reproducing that precision is a
+methodology upgrade we have not yet built, and is the highest-priority
+follow-up.
+
+What this experiment establishes:
+
+1. **The pipeline works end-to-end on real ASF/HyP3 data.** Search,
+   submit, queue, download, raster-sample, feature-extract, model-infer,
+   plot — the chain has zero broken links.
+2. **The model produces a plausible engineering-feature baseline** at
+   the Fundão coordinates (0.75 %), well above the cohort mean, even
+   when the dam is not in the SIGBM registry.
+3. **The current InSAR feature surface is too noisy** to materially
+   refine the engineering-feature prediction at single-dam resolution.
+   This is a known limitation of single-pixel-buffer sampling with no
+   atmospheric correction and matches the methodological literature.
+
+The negative-or-noisy retrospective is a research outcome, not a
+failure. It quantifies what's missing from our pipeline (PSI processing,
+atmospheric correction, multi-reference de-trending) and pushes those
+items to the top of the methodology backlog.
+
+## 5.5 Visualisation
 
 A self-contained Three.js visualisation is shipped at `viz/index.html`:
 877 geocoded dams are rendered as glowing pillars over a simplified

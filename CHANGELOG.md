@@ -8,6 +8,25 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, ninth push — Fundão retrospective)
+- Second HyP3 batch submitted, processed, and downloaded at the actual
+  Fundão dam coordinates (-20.193, -43.493). 42 SBAS pairs, 0 failures,
+  ~10 GB of unwrapped-phase rasters under data/raw/insar/fundao-actual/.
+- `experiments/02_fundao_retrospective/`: rolling-window experiment that
+  runs the hierarchical model month-by-month across 2014-10 to 2015-11
+  and produces `figures/fundao_retrospective.png` + a trajectory CSV.
+- `data/scripts/build_insar_features.py` now supports:
+    download --project-name <name>          ad-hoc HyP3 projects (no SIGBM)
+    features --target <id> --coords LAT LON ad-hoc directory sampling
+- Honest result: the engineering baseline 0.75% at Fundão is correctly
+  elevated above the 0.01% cohort mean for months without InSAR data;
+  once InSAR enters, the predictions oscillate 0.17-3.27% across windows
+  due to atmospheric noise dominating our simple median-pixel sampler.
+  The 2015-11 collapse window carries 0.96%. Reported in paper §5.4 as
+  a partial-precursor finding pointing at the next methodology upgrade
+  (PS-InSAR with atmospheric correction, MintPy-style processing).
+- Manuscript updated with §5.4 retrospective; §5.5 renumbered for the viz.
+
 ### Added (2026-05-21, eighth push — 3D terrain mesh)
 - `data/scripts/build_terrain.py`: fetches AWS Open Data terrarium-format
   tiles, decodes RGB to elevation, clips to Brazil bbox, downsamples to
