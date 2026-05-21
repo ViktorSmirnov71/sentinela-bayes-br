@@ -102,6 +102,10 @@ pytest -q
 
 ## How to read this repository
 
+- `paper/manuscript.md`: full IMRaD draft of the research paper.
+- `viz/index.html`: Three.js 3D ghost map of every Brazilian mining dam,
+  pillar height proportional to the model's predicted 12-month failure
+  probability. See `viz/README.md` for how to launch.
 - `docs/00-overview.md`: one-page abstract and scope.
 - `docs/01-problem.md`: formal problem statement.
 - `docs/02-related-work.md`: literature synthesis and the identified gap.
@@ -112,8 +116,9 @@ pytest -q
 - `docs/refs.bib`: bibliography in BibTeX.
 
 Code lives in `src/sentinela/`; configurations in `configs/`; experiment runs
-in `experiments/` (outputs to `results/`, gitignored). Nothing should appear
-outside these locations.
+in `experiments/` (outputs to `results/`, gitignored). Data and its
+processing pipeline are in `data/` with a navigation key at `data/README.md`.
+The 3D visualisation lives in `viz/`. The paper draft lives in `paper/`.
 
 ## License
 

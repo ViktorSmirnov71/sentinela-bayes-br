@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sentinela · ghost map of Brazilian tailings-dam failure risk</title>
+<style>
+  :root {
+    --bg: #03060c;
+    --fg: #d6f1ff;
+    --accent: #5cffe0;
+    --warn: #ff5cc8;
+    --muted: #5b7080;
+    --font: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  html, body {
+    margin: 0; padding: 0; height: 100%; background: var(--bg);
+    color: var(--fg); font-family: var(--font); overflow: hidden;
+  }
+  #app { position: fixed; inset: 0; }
+  #overlay {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 16px 22px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(3,6,12,0.85), transparent);
+  }
+  #overlay h1 {
+    font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase;
+    margin: 0 0 4px; color: var(--fg); font-weight: 500;
+  }
+  #overlay .subtitle { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  #overlay .subtitle b { color: var(--accent); font-weight: 500; }
+  #stats {
+    position: fixed; bottom: 16px; left: 22px; font-size: 11px;
+    color: var(--muted); line-height: 1.6; pointer-events: none;
+  }
+  #stats .row { display: flex; gap: 12px; }
+  #stats .label { width: 110px; }
+  #stats .value { color: var(--fg); }
+  #legend {
+    position: fixed; bottom: 16px; right: 22px; font-size: 11px;
+    color: var(--muted); line-height: 1.6; pointer-events: none;
+  }
+  #legend .swatch {
+    display: inline-block; width: 10px; height: 10px;
+    margin-right: 6px; vertical-align: middle; border-radius: 50%;
+  }
+  #tooltip {
+    position: fixed; pointer-events: none; padding: 10px 12px;
+    background: rgba(3,6,12,0.92); border: 1px solid var(--muted);
+    border-radius: 4px; font-size: 11px; color: var(--fg);
+    line-height: 1.55; max-width: 280px; display: none;
+    backdrop-filter: blur(4px);
+  }
+  #tooltip .name { color: var(--accent); font-weight: 500; margin-bottom: 4px; }
+  #tooltip .risk { color: var(--warn); font-weight: 600; }
+  .controls {
+    position: fixed; top: 16px; right: 22px; font-size: 11px;
+    color: var(--muted); pointer-events: none; text-align: right;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay">
+  <h1>Sentinela · Brazilian Tailings-Dam Risk Field</h1>
+  <div class="subtitle">
+    Live render of the hierarchical-Bayesian model output over the ANM SIGBM
+    2026-Q2 snapshot. Pillar height = predicted 12-month failure probability.
+    Colour shifts from <b>cyan</b> (background risk) to <b>magenta</b> (top-percentile).
+    Pulsing markers identify the top-30 highest-risk facilities.
+  </div>
+</div>
+<div class="controls">
+  <div>drag · orbit</div>
+  <div>scroll · zoom</div>
+  <div>hover pillar · inspect</div>
+  <div id="paused-indicator"></div>
+</div>
+<div id="stats">
+  <div class="row"><span class="label">dams rendered</span><span class="value" id="stat-n">—</span></div>
+  <div class="row"><span class="label">max risk / yr</span><span class="value" id="stat-max">—</span></div>
+  <div class="row"><span class="label">snapshot</span><span class="value" id="stat-snap">—</span></div>
+  <div class="row"><span class="label">simulation t</span><span class="value" id="stat-t">—</span></div>
+</div>
+<div id="legend">
+  <div><span class="swatch" style="background:#5cffe0"></span>baseline risk</div>
+  <div><span class="swatch" style="background:#a07cff"></span>top decile</div>
+  <div><span class="swatch" style="background:#ff5cc8"></span>top 30 (pulsing)</div>
+  <div><span class="swatch" style="background:#ffe97c"></span>active emergency level</div>
+</div>
+<div id="tooltip"></div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>

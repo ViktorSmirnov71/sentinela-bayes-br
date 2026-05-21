@@ -8,6 +8,30 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, seventh push — research release)
+- `src/sentinela/models/hierarchical.py`: three-level hierarchical Bayesian
+  failure-risk model. Level 1 = Beta-Binomial construction-method posterior.
+  Level 2 = James-Stein-shrunk per-operator logit shift (capped at +/- 1
+  logit). Level 3 = bounded logit shifts for height, volume, age, CRI.
+  Output: per-dam probability with all shrinkage explicit and auditable.
+- `tests/test_hierarchical.py` — 4 tests: end-to-end, height monotonicity,
+  CRI monotonicity, operator-shift cap. 30/30 tests pass overall.
+- `experiments/01_first_prediction/` rewired to use the hierarchical model.
+  Top-10 ranking now spreads risk within the upstream-method shortlist;
+  the Vale Forquilha I/II/III cluster (ANM Emergency Level 2 in 2022)
+  surfaces in the top-10 from engineering features alone.
+- `data/scripts/export_viz_data.py`: writes `viz/data/dams.json` and
+  `viz/data/summary.json` from the model outputs and SIGBM canonical join.
+- `viz/`: Three.js 3D visualisation of the 877 geocoded dams over a
+  simplified Brazil silhouette. Pillar height = predicted 12-month risk;
+  colour ramp cyan -> violet -> magenta; top-30 pulse; emergency-level
+  dams carry a yellow ground halo. Self-contained: HTML + JS only, served
+  by any static-file server.
+- `paper/manuscript.md`: full IMRaD draft of the Sentinela research paper.
+  Covers motivation, related work, data audit, methodology, results,
+  limitations, ethics, future work. Builds to PDF via pandoc.
+- `paper/README.md` documents the build command.
+
 ### Added (2026-05-21, sixth push — first real prediction model)
 - `sentinela.models.baselines.BetaBinomialStratifiedRate`: Beta-Binomial
   smoothed per-class failure rate with literature-derived priors (Rana 2021,

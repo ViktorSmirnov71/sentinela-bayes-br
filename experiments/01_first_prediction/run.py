@@ -19,6 +19,7 @@ from sentinela.evaluation.metrics import (
     expected_calibration_error,
 )
 from sentinela.models.baselines import BetaBinomialStratifiedRate
+from sentinela.models.hierarchical import HierarchicalFailureRisk
 from sentinela.utils.seed import seed_everything
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -26,25 +27,18 @@ COHORT_PANEL = REPO_ROOT / "data" / "processed" / "cohort_panel.parquet"
 SIGBM_CANONICAL = REPO_ROOT / "data" / "processed" / "sigbm_canonical.parquet"
 OUT_DIR = REPO_ROOT / "results" / "01_first_prediction"
 
-CATEGORICAL = ["construction_method", "state", "ore_type"]
-NUMERIC = ["cri", "dpa"]
+def build_design_matrix(panel: pd.DataFrame, sigbm: pd.DataFrame) -> pd.DataFrame:
+    """Assemble feature DataFrame for the hierarchical Bayesian model.
 
-# Why this feature surface (deliberately small): with one linked positive
-# event (Fundão / dam_id 8765), any feature that uniquely identifies that dam
-# — height_m, volume_m3, operator identity, exact age — lets LightGBM
-# memorise the single positive instead of producing a generalisable model.
-# We restrict to features that partition the cohort into broad, non-unique
-# groups: construction method, ore type, state, and the two regulator-
-# assigned ordinals. The resulting model is essentially a smoothed
-# construction-method-stratified rate with weak state/ore/CRI/DPA refinements.
-
-
-def build_design_matrix(panel: pd.DataFrame) -> pd.DataFrame:
-    """Assemble the (deliberately small) feature DataFrame for LightGBM."""
-    X = panel[CATEGORICAL + NUMERIC].copy()
-    for col in CATEGORICAL:
-        X[col] = X[col].astype("category")
-    return X
+    All engineering features are bounded in their effect by the hierarchical
+    model's logit-shift caps, so unique-signature memorisation is
+    structurally impossible.
+    """
+    extras = sigbm[["dam_id", "height_m", "volume_m3", "operator_cnpj"]]
+    X = panel[["dam_id", "construction_method", "cri", "age_at_month_years"]].merge(
+        extras, on="dam_id", how="left",
+    )
+    return X.drop(columns=["dam_id"])
 
 
 def main() -> int:
@@ -65,20 +59,22 @@ def main() -> int:
     sigbm = pd.read_parquet(SIGBM_CANONICAL)
 
     train = panel[panel["in_horizon"]].copy()
-    X_train = build_design_matrix(train)
+    X_train = build_design_matrix(train, sigbm)
     y_train = train["y"].astype(int).to_numpy()
 
-    print(f"fitting Beta-Binomial stratified model on {len(X_train):,} in-horizon rows "
+    print(f"fitting hierarchical model on {len(X_train):,} in-horizon rows "
           f"({int(y_train.sum())} positives)")
-    model = BetaBinomialStratifiedRate(
-        stratify_col="construction_method", alpha=10_000.0,
-    )
+    base = BetaBinomialStratifiedRate(stratify_col="construction_method", alpha=10_000.0)
+    model = HierarchicalFailureRisk(base_rate_model=base)
     model.fit(X_train, pd.Series(y_train))
-    print("  posterior failure rate per construction method:")
-    for cls, p in sorted(model.posterior_.items(), key=lambda kv: -kv[1]):
+    print("  level-1 posterior failure rate per construction method:")
+    for cls, p in sorted(base.posterior_.items(), key=lambda kv: -kv[1]):
         n = int((X_train["construction_method"].astype(str) == cls).sum())
         k = int(y_train[(X_train["construction_method"].astype(str) == cls).to_numpy()].sum())
         print(f"    {cls:<14s}  posterior={p:.5f}  (n_rows={n:,}  positives={k})")
+    nonzero_ops = sum(abs(v) > 1e-6 for v in model.operator_logit_shift_.values())
+    print(f"  level-2 operator effects: {len(model.operator_logit_shift_)} operators, "
+          f"{nonzero_ops} with non-zero shrunk shift")
 
     p_train = model.predict_proba(X_train)
     metrics = {
@@ -95,7 +91,7 @@ def main() -> int:
     print(f"  train_ece      = {metrics['train_ece']:.5f}")
 
     # Predict on every panel row, then slice to the latest snapshot for the ranking.
-    X_all = build_design_matrix(panel)
+    X_all = build_design_matrix(panel, sigbm)
     panel["risk_12m"] = model.predict_proba(X_all)
 
     latest_month = panel["month"].max()
