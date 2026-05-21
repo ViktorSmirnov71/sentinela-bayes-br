@@ -59,14 +59,22 @@ def build_cohort_panel(
         y, in_horizon, censored_weight
     """
     months = pd.period_range(spec.start_month, spec.end_month, freq="M")
-    cohort = sigbm[sigbm["status_active"]].copy()
+    # Include decommissioning + inactive dams in the cohort: they were active at
+    # the time of any pre-decommission failure we want to label. Dams flagged
+    # `under_construction` are excluded since they had no failure-relevant history.
+    eligible_status = ("active", "inactive", "decommissioning")
+    cohort = sigbm[sigbm["ops_status"].isin(eligible_status)].copy()
     panel = cohort.assign(_key=1).merge(
         pd.DataFrame({"month": months, "_key": 1}), on="_key"
     ).drop(columns="_key")
 
-    snapshot_month = pd.Period(sigbm["snapshot_date"].max(), freq="M")
-    panel["age_at_month_years"] = panel["age_years"] + (
-        (panel["month"] - snapshot_month).apply(lambda x: x.n) / 12.0
+    # Compute age at each panel month from the snapshot date in ordinal months.
+    # pd.Period arithmetic on Series misbehaves on recent pandas + Python 3.14;
+    # routing through numpy ints sidesteps the dtype confusion.
+    snapshot_ord = pd.Period(sigbm["snapshot_date"].max(), freq="M").ordinal
+    month_ord_arr = np.asarray([p.ordinal for p in panel["month"]], dtype=np.int64)
+    panel["age_at_month_years"] = panel["age_years"].to_numpy(dtype=float) + (
+        (month_ord_arr - snapshot_ord) / 12.0
     )
 
     panel = _attach_labels(panel, failures, spec)
@@ -98,21 +106,42 @@ def _attach_labels(
     """
     severe = failures[failures["severity_bowker_chambers"] >= spec.severity_min].copy()
     severe["failure_month"] = severe["date"].dt.to_period("M")
-    link_col = "real_sigbm_dam_id" if severe["real_sigbm_dam_id"].notna().any() else "fixture_dam_id"
-    severe = severe.dropna(subset=[link_col]).rename(columns={link_col: "dam_id"})
+    # Per-event linkage: prefer real_sigbm_dam_id, fall back to fixture_dam_id.
+    # This lets the same failures CSV serve both the synthetic-fixture path and
+    # the real-data path without rewriting the table.
+    def _as_dam_id(v) -> str | None:
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return None
+        if isinstance(v, float):
+            return str(int(v))
+        s = str(v).strip()
+        return s if s else None
+
+    severe["dam_id"] = severe["real_sigbm_dam_id"].apply(_as_dam_id).fillna(
+        severe["fixture_dam_id"].apply(_as_dam_id)
+    )
+    severe = severe.dropna(subset=["dam_id"])
     failure_lookup = severe.set_index("dam_id")["failure_month"].to_dict()
 
     panel = panel.copy()
-    panel["failure_month"] = panel["dam_id"].map(failure_lookup)
-    panel["months_to_failure"] = (
-        (panel["failure_month"] - panel["month"]).map(lambda x: x.n if pd.notna(x) else np.nan)
-    )
+    # Use month ordinals (number of months since 1970-01) to avoid Period
+    # subtraction on mixed NaN/Period series, which crashes recent pandas.
+    failure_ord_lookup = {k: v.ordinal for k, v in failure_lookup.items()}
+    panel["_failure_ord"] = panel["dam_id"].map(failure_ord_lookup)
+    panel["_month_ord"] = np.asarray([p.ordinal for p in panel["month"]], dtype=np.int64)
+    panel["months_to_failure"] = panel["_failure_ord"] - panel["_month_ord"]
+
     panel["y"] = (
         panel["months_to_failure"].between(0, spec.horizon_months - 1, inclusive="both")
-    ).astype(int)
+        .fillna(False).astype(int)
+    )
+    panel = panel.drop(columns=["_failure_ord", "_month_ord"])
 
-    cutoff = panel["month"].max()
-    panel["in_horizon"] = (panel["month"] + spec.horizon_months) <= cutoff
+    # Censoring: a row is in-horizon if its 12-month-ahead window fully lies
+    # before the panel's end. Computed on ordinals to keep dtype clean.
+    cutoff_ord = max(p.ordinal for p in panel["month"])
+    row_ord = np.asarray([p.ordinal for p in panel["month"]], dtype=np.int64)
+    panel["in_horizon"] = (row_ord + spec.horizon_months) <= cutoff_ord
     panel["censored_weight"] = panel["in_horizon"].astype(float)
 
-    return panel.drop(columns=["failure_month", "months_to_failure"])
+    return panel.drop(columns=["months_to_failure"])

@@ -73,7 +73,9 @@ def make_fixture(n: int = 120, seed: int = 0) -> pd.DataFrame:
             "dpa": int(dpa[i]),
             "ore_type": ores[i],
             "status_active": True,
+            "ops_status": "active",
             "emergency_level": int(emergency[i]),
+            "pnsb_included": True,
             "snapshot_date": snapshot,
         })
 
@@ -89,7 +91,8 @@ def make_fixture(n: int = 120, seed: int = 0) -> pd.DataFrame:
             "construction_method": "upstream",
             "height_m": 110.0, "volume_m3": 55_000_000.0, "age_years": 7.0,
             "cri": 2, "dpa": 3, "ore_type": "iron",
-            "status_active": True, "emergency_level": 3,
+            "status_active": True, "ops_status": "active",
+            "emergency_level": 3, "pnsb_included": True,
             "snapshot_date": snapshot,
         },
         {
@@ -102,7 +105,8 @@ def make_fixture(n: int = 120, seed: int = 0) -> pd.DataFrame:
             "construction_method": "upstream",
             "height_m": 86.0, "volume_m3": 12_000_000.0, "age_years": 43.0,
             "cri": 2, "dpa": 3, "ore_type": "iron",
-            "status_active": True, "emergency_level": 3,
+            "status_active": True, "ops_status": "active",
+            "emergency_level": 3, "pnsb_included": True,
             "snapshot_date": snapshot,
         },
     ])

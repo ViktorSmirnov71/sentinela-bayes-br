@@ -24,15 +24,42 @@ E. Reference / cross-validation datasets
   Category (CRI), Damage-Potential Category (DPA), age, ore type, declared
   emergency level.
 - **Access.**
-  - Web app: `https://app.anm.gov.br/sigbm/publico`
+  - Web app: `https://app.anm.gov.br/sigbm/publico` → *Data Extraction*
+    exports a semicolon-delimited UTF-8-with-BOM CSV named
+    `Relatorio_<YYYYMMDD>.csv`.
   - Cleaned tabular mirror: `basedosdados.org/dataset/0dccae0e-f872-450b-a209-075a5e877150`
   - dados.gov.br dataset: `https://dados.gov.br/dataset/barragens-de-mineracao`
-- **Schema.** Tabular, ~30 columns, ~700 rows (active dams).
-- **Coverage.** 2019–present, quarterly snapshots.
+- **Schema (verified against `Relatorio_20260721.csv`).** 23 columns, 911 rows.
+  Brazilian decimal format (`,` as decimal separator, `.` as thousands).
+  Coordinates in DMS (e.g. `-20°09'58.822"`); the loader converts to decimal
+  degrees. Categorical fields are in Portuguese (`Alteamento a montante`,
+  `Sem emergência`, etc.) and are normalised by `sentinela.io.sigbm._parse_real_anm`.
+- **Coverage.** 2019–present, real-time updates on the public web app. Note
+  that **failed dams are removed from the active registry post-failure** —
+  see the methodology note below.
+- **Cohort composition (snapshot 2026-07-21).**
+  - 21 Brazilian states; Minas Gerais 35%, Mato Grosso 20%, Pará 13%.
+  - Construction methods: single-stage 53%, downstream 24%, centerline 13%,
+    upstream 5% (the historically dangerous class), unknown/indefinido 5%.
+  - Operational status: 588 active, 145 decommissioning, 144 inactive,
+    34 under construction.
+  - Emergency level (live): 822 none, 12 Alert, 69 Level-1, 7 Level-2,
+    1 Level-3.
 - **License.** Brazilian public open data.
 - **Role.** Defines the cohort $\mathcal{D}$. Provides $x^{\text{static}}$ and
   $x^{\text{ops}}$. The CRI/DPA columns are *not* used as labels but as
   features and as a sanity-check comparator.
+
+**Methodology note — registry amnesia.** The dams in `data/external/brazilian_failures.csv`
+that catastrophically failed are largely absent from the current SIGBM
+snapshot. Vale's Córrego do Feijão B1 (2019), Samarco's Fundão (2015), and
+Herculano B1 (2014) have all been struck from the active registry post-failure.
+The Fundão event can be modeled by proxy via the surviving Samarco structure
+`dam_id 8765` (Barragem de Germano, upstream, decommissioning) at the same
+complex. The other historical failures need pre-failure SIGBM snapshots
+(obtainable from Wayback Machine archives or by FOI request) to be modeled
+prospectively. This limitation is the single biggest gap in our current
+training data and is tracked in `docs/06-ethics-and-limitations.md`.
 
 ### A2. Global Tailings Portal (GTP)
 

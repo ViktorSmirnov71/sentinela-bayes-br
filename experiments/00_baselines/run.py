@@ -79,8 +79,11 @@ def main() -> int:
     print(f"Failure events loaded: {len(failures)} "
           f"(severity >= 4: {(failures['severity_bowker_chambers'] >= 4).sum()})")
 
+    # Panel extends back to 2014 to cover the Sentinel-1 era and to capture the
+    # 12 pre-failure months for Fundão 2015-11 (the only Bowker–Chambers >= 4
+    # event we can currently link to a surviving SIGBM dam_id).
     spec = FeatureTableSpec(
-        start_month="2018-01", end_month="2025-12",
+        start_month="2014-01", end_month="2025-12",
         horizon_months=12, severity_min=4,
     )
     panel = build_cohort_panel(sigbm, failures, spec)
