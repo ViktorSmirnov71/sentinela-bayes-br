@@ -20,7 +20,7 @@ from sentinela.evaluation.metrics import (
 )
 from sentinela.features.build import FeatureTableSpec, build_cohort_panel
 from sentinela.io import fixtures
-from sentinela.io.sigbm import CANONICAL_COLUMNS, load as load_sigbm
+from sentinela.io.sigbm import load as load_sigbm
 from sentinela.io.wmtf import load_brazilian_failures
 from sentinela.models.baselines import (
     AnmCriClassifier,
@@ -28,7 +28,6 @@ from sentinela.models.baselines import (
     PopulationBaseRate,
 )
 from sentinela.utils.seed import seed_everything
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FAILURES_CSV = REPO_ROOT / "data" / "external" / "brazilian_failures.csv"

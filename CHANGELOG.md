@@ -8,6 +8,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, sixth push — first real prediction model)
+- `sentinela.models.baselines.BetaBinomialStratifiedRate`: Beta-Binomial
+  smoothed per-class failure rate with literature-derived priors (Rana 2021,
+  Bowker-Chambers). Designed for the n=1-linked-positive regime where
+  discriminative models either memorise or smooth to zero.
+- `experiments/01_first_prediction/`: first real prediction run on the
+  911-dam cohort. Produces:
+    - `results/01_first_prediction/top_risk_dams.csv` (top-30 ranked).
+    - `results/01_first_prediction/predictions.parquet` (per-row probs).
+    - `results/01_first_prediction/metrics.json` (training metrics).
+- Posterior failure rates per construction method (this snapshot):
+    upstream 0.39%, unknown 0.09%, centerline 0.04%, single_stage 0.013%,
+    downstream 0.013%. Empirical data dominates on upstream; literature
+    prior dominates on the other classes.
+- 5 new tests for the Beta-Binomial model (prior/data blending, edge cases,
+  unknown-class fallback). 26/26 tests pass.
+
 ### Changed (2026-05-21, fifth push)
 - `sentinela.io.sentinel1.pick_best_orbit` added. Searches both ASCENDING and
   DESCENDING for a given bbox and time window, returns whichever has more

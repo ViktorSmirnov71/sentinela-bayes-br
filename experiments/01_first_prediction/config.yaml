@@ -1,0 +1,26 @@
+seed: 0
+
+inputs:
+  cohort_panel: data/processed/cohort_panel.parquet
+  sigbm_canonical: data/processed/sigbm_canonical.parquet
+
+features:
+  categorical: [construction_method, state, ore_type]
+  numeric: [height_m, volume_m3, age_at_month_years, cri, dpa]
+  operator_freq_encode: operator_cnpj
+
+model:
+  type: lightgbm
+  params:
+    objective: binary
+    is_unbalance: true
+    learning_rate: 0.05
+    num_leaves: 15
+    min_data_in_leaf: 20
+    feature_fraction: 0.9
+    n_estimators: 500
+    verbosity: -1
+
+outputs:
+  dir: results/01_first_prediction
+  top_n: 30
