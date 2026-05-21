@@ -109,6 +109,53 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_download(args: argparse.Namespace) -> int:
+    """Download succeeded HyP3 products into data/raw/insar/<dam_id>/.
+
+    Files arrive as .zip per pair; we extract them so the *_unw_phase.tif
+    rasters that the feature extractor consumes are present at the
+    expected path.
+    """
+    import zipfile
+    from collections import Counter
+
+    import hyp3_sdk as sdk
+
+    hyp3 = sdk.HyP3()
+    for dam_id in args.dam_ids:
+        name = f"sentinela-{dam_id}"
+        batch = hyp3.find_jobs(name=name)
+        if not batch.jobs:
+            print(f"== {name}: no jobs found ==")
+            continue
+        ok = [j for j in batch.jobs if j.status_code == "SUCCEEDED"]
+        breakdown = Counter(j.status_code for j in batch.jobs)
+        print(f"== {name} ==")
+        print(f"  total {len(batch)}; breakdown: {dict(breakdown)}")
+        if not ok:
+            print("  no succeeded jobs to download yet")
+            continue
+        dest = INSAR_RAW_DIR / dam_id
+        dest.mkdir(parents=True, exist_ok=True)
+        print(f"  downloading {len(ok)} products into {dest.relative_to(REPO_ROOT)}")
+        # Download each job's product zip; skip if already present.
+        from tqdm import tqdm
+
+        for job in tqdm(ok, desc=f"  dam {dam_id}", unit="job"):
+            for path in job.download_files(location=dest, create=True):
+                if path.suffix == ".zip" and not args.no_unzip:
+                    try:
+                        with zipfile.ZipFile(path) as zf:
+                            zf.extractall(dest)
+                        if args.cleanup_zip:
+                            path.unlink()
+                    except zipfile.BadZipFile:
+                        print(f"    warning: bad zip {path}; skipping unpack")
+        n_tifs = sum(1 for _ in dest.rglob("*_unw_phase.tif"))
+        print(f"  done: {n_tifs} *_unw_phase.tif files now under {dest.relative_to(REPO_ROOT)}")
+    return 0
+
+
 def cmd_features(args: argparse.Namespace) -> int:
     """Extract per-dam features from local HyP3 products."""
     from sentinela.insar.features import TimeSeries, compute_features
@@ -183,6 +230,14 @@ def main() -> int:
     g.add_argument("--project-names", nargs="+",
                    help="explicit HyP3 project names")
     p_stat.set_defaults(func=cmd_status)
+
+    p_dl = sub.add_parser("download", help="download succeeded HyP3 products locally")
+    p_dl.add_argument("--dam-ids", nargs="+", required=True)
+    p_dl.add_argument("--no-unzip", action="store_true",
+                      help="keep .zip files instead of unpacking the *_unw_phase.tif")
+    p_dl.add_argument("--cleanup-zip", action="store_true",
+                      help="remove .zip files after successful extraction")
+    p_dl.set_defaults(func=cmd_download)
 
     p_feat = sub.add_parser("features", help="extract features from local products")
     p_feat.set_defaults(func=cmd_features)

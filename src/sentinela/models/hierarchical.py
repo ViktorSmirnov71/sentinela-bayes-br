@@ -56,6 +56,28 @@ class HierarchicalFailureRisk:
         "cri_ord":        0.20,   # higher ANM CRI ordinal = higher risk
     }
 
+    # InSAR precursor coefficients on the LOGIT scale. Sign convention:
+    # POSITIVE coefficient on a feature means LARGER feature value -> MORE risk.
+    # All four features are bounded in their effect by INSAR_TOTAL_CAP so that
+    # InSAR cannot override the engineering / regulatory base by an
+    # unreasonable factor.
+    INSAR_COEFFICIENTS = {
+        # Subsidence (negative LOS velocity) increases risk: each -10 mm/yr
+        # adds 0.3 logit units. Sign flip so we apply -coef * value.
+        "los_velocity_mm_yr_neg10": 0.30,
+        # Accelerating subsidence is the Carla precursor: positive
+        # `los_accel_90d_mm_yr2` (per our sign convention) means
+        # "subsidence accelerating". Each +50 mm/yr^2 adds 0.5 logit.
+        "los_accel_per_50":         0.50,
+        # More-negative spectral slope = more drift power: each -0.5 slope
+        # below zero adds 0.2 logit.
+        "spectral_slope_neg":       0.20,
+        # Grebby anomaly: variance ratio - 1 (i.e. crest moving more than
+        # the stable reference). Each unit excess adds 0.3 logit.
+        "variance_excess":          0.30,
+    }
+    INSAR_TOTAL_CAP = 1.5    # cap on the summed InSAR logit shift per dam
+
     # Operator shrinkage strength: a per-operator logit shift is pulled toward
     # zero by this many "equivalent observations" of zero deviation.
     OPERATOR_SHRINKAGE_LAMBDA = 50.0
@@ -132,5 +154,24 @@ class HierarchicalFailureRisk:
             ops = X["operator_cnpj"].astype(str).to_numpy()
             shifts = np.asarray([self.operator_logit_shift_.get(o, 0.0) for o in ops])
             logit = logit + shifts
+
+        # Level 4 — InSAR precursor features. Bounded total shift so InSAR
+        # can refine within-class ranking but cannot fully override Level 1-3.
+        insar_shift = np.zeros(len(X))
+        if "los_velocity_mm_yr" in X.columns:
+            v = pd.to_numeric(X["los_velocity_mm_yr"], errors="coerce").fillna(0.0).to_numpy()
+            # negative velocity = subsiding, increases risk; normalise to 10mm/yr units
+            insar_shift = insar_shift + self.INSAR_COEFFICIENTS["los_velocity_mm_yr_neg10"] * (-v / 10.0)
+        if "los_accel_90d_mm_yr2" in X.columns:
+            a = pd.to_numeric(X["los_accel_90d_mm_yr2"], errors="coerce").fillna(0.0).to_numpy()
+            insar_shift = insar_shift + self.INSAR_COEFFICIENTS["los_accel_per_50"] * (a / 50.0)
+        if "spectral_slope" in X.columns:
+            s = pd.to_numeric(X["spectral_slope"], errors="coerce").fillna(0.0).to_numpy()
+            insar_shift = insar_shift + self.INSAR_COEFFICIENTS["spectral_slope_neg"] * (-s / 0.5)
+        if "crest_vs_stable_variance_ratio" in X.columns:
+            vr = pd.to_numeric(X["crest_vs_stable_variance_ratio"], errors="coerce").fillna(1.0).to_numpy()
+            insar_shift = insar_shift + self.INSAR_COEFFICIENTS["variance_excess"] * (vr - 1.0)
+        insar_shift = np.clip(insar_shift, -self.INSAR_TOTAL_CAP, self.INSAR_TOTAL_CAP)
+        logit = logit + insar_shift
 
         return _sigmoid(logit)

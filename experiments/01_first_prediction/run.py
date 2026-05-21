@@ -25,9 +25,14 @@ from sentinela.utils.seed import seed_everything
 REPO_ROOT = Path(__file__).resolve().parents[2]
 COHORT_PANEL = REPO_ROOT / "data" / "processed" / "cohort_panel.parquet"
 SIGBM_CANONICAL = REPO_ROOT / "data" / "processed" / "sigbm_canonical.parquet"
+INSAR_FEATURES = REPO_ROOT / "data" / "processed" / "insar_features.parquet"
 OUT_DIR = REPO_ROOT / "results" / "01_first_prediction"
 
-def build_design_matrix(panel: pd.DataFrame, sigbm: pd.DataFrame) -> pd.DataFrame:
+def build_design_matrix(
+    panel: pd.DataFrame,
+    sigbm: pd.DataFrame,
+    insar: pd.DataFrame | None = None,
+) -> pd.DataFrame:
     """Assemble feature DataFrame for the hierarchical Bayesian model.
 
     All engineering features are bounded in their effect by the hierarchical
@@ -38,6 +43,11 @@ def build_design_matrix(panel: pd.DataFrame, sigbm: pd.DataFrame) -> pd.DataFram
     X = panel[["dam_id", "construction_method", "cri", "age_at_month_years"]].merge(
         extras, on="dam_id", how="left",
     )
+    if insar is not None and not insar.empty:
+        keep = ["dam_id", "los_velocity_mm_yr", "los_accel_90d_mm_yr2",
+                "spectral_slope", "crest_vs_stable_variance_ratio"]
+        present = [c for c in keep if c in insar.columns]
+        X = X.merge(insar[present], on="dam_id", how="left")
     return X.drop(columns=["dam_id"])
 
 
@@ -58,8 +68,16 @@ def main() -> int:
     print(f"loading SIGBM canonical from {SIGBM_CANONICAL.relative_to(REPO_ROOT)}")
     sigbm = pd.read_parquet(SIGBM_CANONICAL)
 
+    insar = None
+    if INSAR_FEATURES.exists():
+        insar = pd.read_parquet(INSAR_FEATURES)
+        print(f"loading InSAR features from {INSAR_FEATURES.relative_to(REPO_ROOT)}: "
+              f"{len(insar)} dam(s) with precursor data")
+    else:
+        print("no InSAR features parquet found — Level-4 shifts inactive")
+
     train = panel[panel["in_horizon"]].copy()
-    X_train = build_design_matrix(train, sigbm)
+    X_train = build_design_matrix(train, sigbm, insar)
     y_train = train["y"].astype(int).to_numpy()
 
     print(f"fitting hierarchical model on {len(X_train):,} in-horizon rows "
@@ -91,7 +109,7 @@ def main() -> int:
     print(f"  train_ece      = {metrics['train_ece']:.5f}")
 
     # Predict on every panel row, then slice to the latest snapshot for the ranking.
-    X_all = build_design_matrix(panel, sigbm)
+    X_all = build_design_matrix(panel, sigbm, insar)
     panel["risk_12m"] = model.predict_proba(X_all)
 
     latest_month = panel["month"].max()

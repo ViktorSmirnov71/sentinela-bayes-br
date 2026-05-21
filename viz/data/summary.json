@@ -1,9 +1,9 @@
 {
   "snapshot_month": "2025-12",
   "n_dams": 877,
-  "max_risk": 0.01969936049444008,
+  "max_risk": 0.01595019236082926,
   "min_risk": 2.9159965285586495e-05,
-  "mean_risk": 0.00022992636990418292,
+  "mean_risk": 0.00022565137773358903,
   "method_counts": {
     "single_stage": 486,
     "downstream": 223,
