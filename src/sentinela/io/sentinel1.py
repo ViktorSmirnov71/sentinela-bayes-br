@@ -182,14 +182,27 @@ def short_baseline_pairs(
 ) -> list[tuple[Scene, Scene]]:
     """Generate the short-baseline-subset (SBAS) pair list.
 
-    For each scene, pair it with its `n_temporal_neighbors` closest temporal
-    successors. This is the standard SBAS-style design used by HyP3 batch
-    processing — keeps temporal baselines short and forms a connected network.
+    Pairs are formed WITHIN a relative-orbit track (`track` attribute).
+    Sentinel-1 has many tracks that may both intersect a small bbox; pairs
+    formed across tracks have geometric baselines that exceed the InSAR
+    coherence limit and will fail at HyP3 processing time. We discovered
+    this empirically on the Brumadinho B1 submission: cross-track pairs
+    accounted for ~40% of HyP3 failures before this fix.
+
+    Within each track, pair each scene with its `n_temporal_neighbors`
+    closest temporal successors — the standard SBAS-style design used by
+    HyP3 batch processing.
     """
+    by_track: dict[int, list[Scene]] = {}
+    for s in scenes:
+        by_track.setdefault(s.track, []).append(s)
+
     pairs: list[tuple[Scene, Scene]] = []
-    for i, s in enumerate(scenes):
-        for j in range(i + 1, min(len(scenes), i + 1 + n_temporal_neighbors)):
-            pairs.append((s, scenes[j]))
+    for track_scenes in by_track.values():
+        track_scenes = sorted(track_scenes, key=lambda s: s.start_time)
+        for i, s in enumerate(track_scenes):
+            for j in range(i + 1, min(len(track_scenes), i + 1 + n_temporal_neighbors)):
+                pairs.append((s, track_scenes[j]))
     return pairs
 
 
