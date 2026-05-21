@@ -34,10 +34,12 @@ function project(lon, lat) {
   };
 }
 
+// Light-mode risk ramp: teal -> deep violet -> magenta. Saturated enough to
+// pop against the pale background; no glow / bloom needed.
 function riskColour(t /* 0..1, higher = riskier */) {
-  const c0 = new THREE.Color(0x5cffe0);
-  const c1 = new THREE.Color(0xa07cff);
-  const c2 = new THREE.Color(0xff5cc8);
+  const c0 = new THREE.Color(0x00a896);
+  const c1 = new THREE.Color(0x6b3aa0);
+  const c2 = new THREE.Color(0xc8186c);
   if (t < 0.5) return c0.clone().lerp(c1, t * 2);
   return c1.clone().lerp(c2, (t - 0.5) * 2);
 }
@@ -47,8 +49,8 @@ const app = document.getElementById("app");
 const tooltip = document.getElementById("tooltip");
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x03060c);
-scene.fog = new THREE.FogExp2(0x03060c, 0.0085);
+scene.background = new THREE.Color(0xf4f6f9);
+scene.fog = new THREE.FogExp2(0xf4f6f9, 0.0055);
 
 const camera = new THREE.PerspectiveCamera(
   42, window.innerWidth / window.innerHeight, 0.1, 1200
@@ -58,15 +60,17 @@ camera.position.set(70, 90, 140);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.9;
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.toneMappingExposure = 1.0;
 app.appendChild(renderer.domElement);
 
+// Very mild bloom — just enough to give the saturated spike tips a soft halo
+// against the pale background; not the heavy glow of the dark version.
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 composer.addPass(new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  /* strength */ 1.0, /* radius */ 0.65, /* threshold */ 0.0
+  /* strength */ 0.22, /* radius */ 0.55, /* threshold */ 0.55
 ));
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -105,18 +109,16 @@ const elevMin = terrain.elev_min_m;
 const elevMax = terrain.elev_max_m;
 
 for (let i = 0; i < positions.count; i++) {
-  // The PlaneGeometry with rotateX vertex ordering scans row-by-row, top-to-bottom
-  // in Y (after rotation, in +Z). Row 0 of `elev` corresponds to lat_max (north),
-  // which after our projection is at -PLANE_H/2 in world Z. The vertex at index 0
-  // is at world (-PLANE_W/2, 0, -PLANE_H/2), which is the north-west corner — matching.
   const e = elev[i];
   const y = e * ELEV_TO_WORLD;
   positions.setY(i, y);
-  // Colour: dark navy floor, slight cyan tint for higher elevation.
+  // Light-mode terrain palette: pale grey-blue lowland -> slightly warmer
+  // tan-grey highland. Subtle enough to remain background; rich enough to
+  // reveal Brazilian highland structure.
   const t = Math.min(1, Math.max(0, (e - elevMin) / (elevMax - elevMin + 1e-6)));
-  const r = 0.04 + 0.14 * t;
-  const g = 0.09 + 0.20 * t;
-  const b = 0.15 + 0.22 * t;
+  const r = 0.84 + 0.05 * t;
+  const g = 0.86 + 0.02 * t;
+  const b = 0.88 - 0.10 * t;
   colours[i * 3 + 0] = r;
   colours[i * 3 + 1] = g;
   colours[i * 3 + 2] = b;
@@ -127,20 +129,18 @@ terrainGeo.setAttribute("color", new THREE.BufferAttribute(colours, 3));
 
 const terrainMat = new THREE.MeshStandardMaterial({
   vertexColors: true,
-  flatShading: true,        // low-poly faceted look
-  metalness: 0.05,
-  roughness: 0.85,
-  transparent: true,
-  opacity: 0.96,
+  flatShading: true,
+  metalness: 0.0,
+  roughness: 1.0,
+  transparent: false,
 });
 const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
-terrainMesh.receiveShadow = false;
 scene.add(terrainMesh);
 
-// Topographic wireframe overlay, semi-transparent cyan, only on faces above water.
+// Topographic wireframe overlay — darker grey for legibility on a light bg.
 const wireGeo = terrainGeo.clone();
 const wireMat = new THREE.MeshBasicMaterial({
-  color: 0x3fb7d8,
+  color: 0x5a6878,
   wireframe: true,
   transparent: true,
   opacity: 0.10,
@@ -177,7 +177,7 @@ function sampleTerrainY(lon, lat) {
   });
   const geom = new THREE.BufferGeometry().setFromPoints(pts);
   const mat = new THREE.LineBasicMaterial({
-    color: 0x5cffe0, transparent: true, opacity: 0.55,
+    color: 0x1d6cff, transparent: true, opacity: 0.85, linewidth: 2,
   });
   scene.add(new THREE.Line(geom, mat));
 }
@@ -206,11 +206,9 @@ for (const dam of dams) {
   const mat = new THREE.MeshStandardMaterial({
     color: colour,
     emissive: colour,
-    emissiveIntensity: 1.5 + 3 * tRisk,
-    roughness: 0.3,
-    metalness: 0.2,
-    transparent: true,
-    opacity: 0.95,
+    emissiveIntensity: 0.15 + 0.6 * tRisk,   // subtle glow on high-risk only
+    roughness: 0.35,
+    metalness: 0.05,
   });
   const mesh = new THREE.Mesh(spikeGeo, mat);
   mesh.position.set(x, groundY, z);
@@ -228,7 +226,7 @@ for (const dam of dams) {
     const halo = new THREE.Mesh(
       new THREE.RingGeometry(0.9, 1.9, 32),
       new THREE.MeshBasicMaterial({
-        color: 0xffe97c, transparent: true, opacity: 0.55, side: THREE.DoubleSide,
+        color: 0xf59e0b, transparent: true, opacity: 0.85, side: THREE.DoubleSide,
       })
     );
     halo.rotation.x = -Math.PI / 2;
@@ -237,26 +235,29 @@ for (const dam of dams) {
   }
 }
 
-// ---------- lighting ----------
-scene.add(new THREE.AmbientLight(0x162a40, 0.55));
-scene.add(new THREE.HemisphereLight(0x88e6ff, 0x040810, 0.35));
-const dir = new THREE.DirectionalLight(0xd0eaff, 0.55);
-dir.position.set(-80, 90, 40);
+// ---------- lighting (light scene) ----------
+scene.add(new THREE.AmbientLight(0xffffff, 0.95));
+scene.add(new THREE.HemisphereLight(0xffffff, 0xc8d2dc, 0.45));
+const dir = new THREE.DirectionalLight(0xffffff, 0.75);
+dir.position.set(-80, 120, 60);
 scene.add(dir);
+const dirFill = new THREE.DirectionalLight(0xe6ecf3, 0.25);
+dirFill.position.set(60, 50, -40);
+scene.add(dirFill);
 
-// ---------- ghost dust particles ----------
+// ---------- atmospheric dust (very subtle in light mode) ----------
 {
-  const N = 1400;
+  const N = 600;
   const positions = new Float32Array(N * 3);
   for (let i = 0; i < N; i++) {
-    positions[3 * i + 0] = (Math.random() - 0.5) * PLANE_W * 1.3;
-    positions[3 * i + 1] = Math.random() * 60 + 1;
-    positions[3 * i + 2] = (Math.random() - 0.5) * PLANE_H * 1.3;
+    positions[3 * i + 0] = (Math.random() - 0.5) * PLANE_W * 1.2;
+    positions[3 * i + 1] = Math.random() * 50 + 1;
+    positions[3 * i + 2] = (Math.random() - 0.5) * PLANE_H * 1.2;
   }
   const geom = new THREE.BufferGeometry();
   geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   const mat = new THREE.PointsMaterial({
-    color: 0x88e6ff, size: 0.35, transparent: true, opacity: 0.35, depthWrite: false,
+    color: 0x8090a0, size: 0.18, transparent: true, opacity: 0.22, depthWrite: false,
   });
   scene.add(new THREE.Points(geom, mat));
 }
@@ -320,9 +321,9 @@ function animate() {
   const pulseBase = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(clock.elapsedTime * 1.8));
   for (const r of pillarRecords) {
     if (r.isTop30) {
-      const s = 1.0 + 0.4 * pulseBase;
+      const s = 1.0 + 0.32 * pulseBase;
       r.mesh.scale.y = r.baseHeight * s;
-      r.mesh.material.emissiveIntensity = 2.4 + 4 * pulseBase;
+      r.mesh.material.emissiveIntensity = 0.25 + 0.6 * pulseBase;
     }
   }
 

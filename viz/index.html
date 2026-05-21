@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sentinela · ghost map of Brazilian tailings-dam failure risk</title>
+<title>Sentinela · Brazilian tailings-dam failure risk field</title>
 <style>
   :root {
-    --bg: #03060c;
-    --fg: #d6f1ff;
-    --accent: #5cffe0;
-    --warn: #ff5cc8;
-    --muted: #5b7080;
+    --bg:     #f4f6f9;
+    --fg:     #1a2230;
+    --accent: #1d6cff;
+    --warn:   #c8186c;
+    --muted:  #6d7a8a;
+    --line:   #d0d6df;
     --font: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   }
   html, body {
@@ -21,38 +22,42 @@
   #overlay {
     position: fixed; top: 0; left: 0; right: 0;
     padding: 16px 22px; pointer-events: none;
-    background: linear-gradient(180deg, rgba(3,6,12,0.85), transparent);
+    background: linear-gradient(180deg, rgba(244,246,249,0.92), transparent);
   }
   #overlay h1 {
     font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase;
-    margin: 0 0 4px; color: var(--fg); font-weight: 500;
+    margin: 0 0 4px; color: var(--fg); font-weight: 600;
   }
   #overlay .subtitle { font-size: 12px; color: var(--muted); line-height: 1.5; }
-  #overlay .subtitle b { color: var(--accent); font-weight: 500; }
+  #overlay .subtitle b { color: var(--accent); font-weight: 600; }
   #stats {
     position: fixed; bottom: 16px; left: 22px; font-size: 11px;
     color: var(--muted); line-height: 1.6; pointer-events: none;
   }
   #stats .row { display: flex; gap: 12px; }
   #stats .label { width: 110px; }
-  #stats .value { color: var(--fg); }
+  #stats .value { color: var(--fg); font-weight: 600; }
   #legend {
     position: fixed; bottom: 16px; right: 22px; font-size: 11px;
     color: var(--muted); line-height: 1.6; pointer-events: none;
+    background: rgba(244,246,249,0.7); padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 4px;
   }
   #legend .swatch {
     display: inline-block; width: 10px; height: 10px;
     margin-right: 6px; vertical-align: middle; border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
   }
   #tooltip {
     position: fixed; pointer-events: none; padding: 10px 12px;
-    background: rgba(3,6,12,0.92); border: 1px solid var(--muted);
+    background: rgba(255,255,255,0.97); border: 1px solid var(--line);
     border-radius: 4px; font-size: 11px; color: var(--fg);
     line-height: 1.55; max-width: 280px; display: none;
+    box-shadow: 0 4px 16px rgba(20,30,50,0.10);
     backdrop-filter: blur(4px);
   }
-  #tooltip .name { color: var(--accent); font-weight: 500; margin-bottom: 4px; }
-  #tooltip .risk { color: var(--warn); font-weight: 600; }
+  #tooltip .name { color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  #tooltip .risk { color: var(--warn); font-weight: 700; }
   .controls {
     position: fixed; top: 16px; right: 22px; font-size: 11px;
     color: var(--muted); pointer-events: none; text-align: right;
@@ -64,10 +69,10 @@
 <div id="overlay">
   <h1>Sentinela · Brazilian Tailings-Dam Risk Field</h1>
   <div class="subtitle">
-    Live render of the hierarchical-Bayesian model output over the ANM SIGBM
-    2026-Q2 snapshot, on a 3D mesh of Brazil's terrain (SRTM via terrarium tiles).
+    Hierarchical-Bayesian model output over the ANM SIGBM 2026-Q2 snapshot,
+    rendered on a 3D mesh of Brazil's terrain (SRTM via terrarium tiles).
     Spike height = predicted 12-month failure probability. Colour shifts from
-    <b>cyan</b> (background risk) to <b>magenta</b> (top-percentile). Pulsing
+    <b>teal</b> (background risk) to <b>magenta</b> (top-percentile). Pulsing
     spikes identify the top-30 highest-risk facilities.
   </div>
 </div>
@@ -84,10 +89,10 @@
   <div class="row"><span class="label">simulation t</span><span class="value" id="stat-t">—</span></div>
 </div>
 <div id="legend">
-  <div><span class="swatch" style="background:#5cffe0"></span>baseline risk</div>
-  <div><span class="swatch" style="background:#a07cff"></span>top decile</div>
-  <div><span class="swatch" style="background:#ff5cc8"></span>top 30 (pulsing)</div>
-  <div><span class="swatch" style="background:#ffe97c"></span>active emergency level</div>
+  <div><span class="swatch" style="background:#00a896"></span>baseline risk</div>
+  <div><span class="swatch" style="background:#6b3aa0"></span>top decile</div>
+  <div><span class="swatch" style="background:#c8186c"></span>top 30 (pulsing)</div>
+  <div><span class="swatch" style="background:#f59e0b"></span>active emergency level</div>
 </div>
 <div id="tooltip"></div>
 <script type="importmap">
