@@ -53,19 +53,40 @@ class Scene:
     bbox: tuple[float, float, float, float]   # (min_lon, min_lat, max_lon, max_lat)
 
 
-def _require_credentials() -> tuple[str, str]:
-    """Return (username, password) from env; raise with a clear message if missing."""
+def _resolve_credentials() -> tuple[str | None, str | None]:
+    """Return (username, password) if explicitly available, else (None, None).
+
+    Resolution order:
+      1. Environment variables EARTHDATA_USERNAME / EARTHDATA_PASSWORD.
+      2. A `.netrc` entry for `urs.earthdata.nasa.gov` (hyp3_sdk handles this
+         automatically when we pass None/None, so we just verify the entry
+         exists before letting the SDK proceed).
+      3. Otherwise raise a friendly RuntimeError telling the user what to do.
+    """
     user = os.environ.get("EARTHDATA_USERNAME")
     pwd = os.environ.get("EARTHDATA_PASSWORD")
-    if not (user and pwd):
-        raise RuntimeError(
-            "EARTHDATA_USERNAME and EARTHDATA_PASSWORD must be set to access "
-            "the Alaska Satellite Facility's Sentinel-1 catalog and HyP3 "
-            "service. Free Earthdata Login at "
-            "https://urs.earthdata.nasa.gov/users/new; then export both "
-            "variables or add a .netrc entry."
-        )
-    return user, pwd
+    if user and pwd:
+        return user, pwd
+
+    # Check ~/.netrc for an Earthdata entry.
+    try:
+        import netrc
+
+        nrc = netrc.netrc()
+        auth = nrc.authenticators("urs.earthdata.nasa.gov")
+        if auth:
+            # hyp3_sdk will read .netrc itself when we pass None for both.
+            return None, None
+    except (FileNotFoundError, netrc.NetrcParseError):
+        pass
+
+    raise RuntimeError(
+        "Earthdata credentials not found. Either:\n"
+        "  (a) export EARTHDATA_USERNAME and EARTHDATA_PASSWORD in your shell, or\n"
+        "  (b) add a .netrc entry for urs.earthdata.nasa.gov "
+        "(chmod 600 ~/.netrc).\n"
+        "Free Earthdata Login: https://urs.earthdata.nasa.gov/users/new"
+    )
 
 
 def bbox_for_dam(
@@ -186,7 +207,7 @@ def submit_insar_pairs(
 
     import hyp3_sdk as sdk  # lazy import
 
-    user, pwd = _require_credentials()
+    user, pwd = _resolve_credentials()
     hyp3 = sdk.HyP3(username=user, password=pwd)
     batch = sdk.Batch()
     for ref, sec in pairs:
@@ -207,7 +228,7 @@ def download_completed(batch: Any, dest_dir: Path) -> list[Path]:
     """Wait for and download a HyP3 batch into `dest_dir`. Returns product paths."""
     import hyp3_sdk as sdk  # lazy import
 
-    user, pwd = _require_credentials()
+    user, pwd = _resolve_credentials()
     hyp3 = sdk.HyP3(username=user, password=pwd)
     dest_dir.mkdir(parents=True, exist_ok=True)
     completed = hyp3.watch(batch)
