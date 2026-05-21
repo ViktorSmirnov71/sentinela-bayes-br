@@ -20,6 +20,8 @@ data/processed/*
 # Allow folder anchors and per-folder READMEs.
 !data/raw/.gitkeep
 !data/raw/README.md
+!data/raw/insar/
+!data/raw/insar/README.md
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 !data/processed/README.md

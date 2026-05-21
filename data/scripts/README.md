@@ -40,6 +40,26 @@ python data/scripts/build_cohort.py --start-month 2014-01 --end-month 2025-12 \
 
 Heavy lifting in `src/sentinela/features/build.py::build_cohort_panel`.
 
+### `build_insar_features.py`
+
+Two-mode script for the Sentinel-1 InSAR pipeline.
+
+```bash
+# Submit HyP3 InSAR jobs for one or more dams (requires Earthdata credentials).
+# Async; jobs queue at ASF and complete in 1-48 hours.
+python data/scripts/build_insar_features.py pull \
+       --dam-ids 8765 --start 2014-10-01 --end 2015-11-30
+
+# Once HyP3 products are downloaded under data/raw/insar/<dam_id>/, extract
+# per-dam precursor features (velocity, acceleration, spectral slope, variance
+# ratio, coherence p10, PS density).
+python data/scripts/build_insar_features.py features
+```
+
+Heavy lifting in `src/sentinela/io/sentinel1.py` (ASF + HyP3 orchestration),
+`src/sentinela/insar/timeseries.py` (per-dam LOS sampling from rasters), and
+`src/sentinela/insar/features.py` (feature extraction).
+
 ## Determinism
 
 Both scripts are deterministic functions of their inputs and arguments. If

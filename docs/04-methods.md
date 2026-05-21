@@ -45,16 +45,32 @@ From SIGBM:
 Per dam, for both ascending and descending Sentinel-1 tracks, compute on the
 trailing 12-month window:
 
-- mean and median line-of-sight (LOS) velocity (mm/yr)
-- maximum 90-day acceleration (mm/yr²)
-- spectral slope of LOS displacement time series (Carlà-style precursor)
-- variance ratio of displacement on the dam crest vs. on stable surrounding
-  ground (a Grebby-style anomaly indicator)
-- persistent-scatterer density on the dam
-- decorrelation index (coherence quantile)
+- LOS velocity (mm/yr) — robust Theil–Sen slope of LOS displacement.
+- LOS acceleration (mm/yr²) — second-derivative coefficient of a quadratic
+  fit to the trailing window's displacement series. This is the Carlà 2019
+  inverse-velocity precursor operationalised as a quadratic-trend test;
+  positive output indicates subsidence is accelerating.
+- Spectral slope of LOS displacement (dimensionless) — log-log slope of the
+  Welch PSD on the lower-frequency half. More-negative slopes indicate
+  power concentrated at low frequencies, the signature of drift over
+  white-noise atmospheric measurement error.
+- Variance ratio of dam-crest LOS displacement vs. a stable reference
+  point ~3 km away (Grebby 2021 anomaly indicator). Both series are
+  detrended before computing the ratio so common-mode atmospheric signals
+  cancel.
+- Persistent-scatterer density per km² on the dam structure.
+- Coherence p10 — the 10th percentile of pairwise coherence values across
+  the time series; a decorrelation proxy.
 
-We will use the HyP3 short-baseline InSAR products via the ASF API as the
-operational backbone, and use MintPy + ISCE2 for the retrospective Fundão /
+These features are implemented in `src/sentinela/insar/features.py` and unit-
+tested against a synthetic Brumadinho-like signal (stable baseline → linear
+creep → quadratic acceleration) in `tests/test_insar_features.py`. The
+extractors operate on `(times_days, los_mm)` numpy arrays produced by the
+per-dam time-series builder.
+
+We use HyP3 short-baseline InSAR products via the ASF API as the operational
+backbone (`sentinela.io.sentinel1`), and use MintPy + ISCE2 for the
+retrospective Fundão /
 B1 analyses where time-series quality is critical.
 
 ### 3.3 Climate features $x^{\text{climate}}_{i,t}$

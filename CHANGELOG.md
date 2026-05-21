@@ -8,6 +8,37 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-21, fourth push — InSAR pipeline)
+- Real implementations of the Sentinel-1 InSAR precursor feature extractors
+  in `src/sentinela/insar/features.py`:
+  - `los_velocity` — Theil-Sen robust slope (mm/yr).
+  - `acceleration_90d` — quadratic-fit second derivative over the trailing
+    12 months (Carla 2019 inverse-velocity precursor, mm/yr²).
+  - `spectral_slope` — log-log slope of the Welch PSD.
+  - `crest_vs_stable_variance_ratio` — Grebby 2021 anomaly indicator.
+  - `compute_features` aggregator returning the full `InsarFeatures` bundle.
+- `src/sentinela/insar/synthetic.py` — generator for Brumadinho-like LOS time
+  series (stable -> creep -> quadratic acceleration with calibrated noise),
+  used as the ground-truth fixture for unit tests.
+- `tests/test_insar_features.py` — eight tests verifying the extractors
+  recover the synthetic signal directionally and quantitatively.
+- `src/sentinela/io/sentinel1.py` rewritten as a real orchestration layer
+  over `asf_search` + `hyp3_sdk` (both lazy-imported):
+  - `bbox_for_dam`, `search_scenes`, `short_baseline_pairs`,
+    `submit_insar_pairs`, `download_completed`, plus credential-check helper.
+- `src/sentinela/insar/timeseries.py` — per-dam LOS-displacement time-series
+  builder. Samples HyP3 unwrapped-phase GeoTIFFs at the dam centroid with a
+  configurable buffer, plus a stable reference point ~3 km away for the
+  variance-ratio computation.
+- `data/scripts/build_insar_features.py` — two-mode runnable script:
+  - `pull` submits HyP3 InSAR jobs for the configured dam IDs (queues async).
+  - `features` extracts per-dam features from local HyP3 products and writes
+    `data/processed/insar_features.parquet`.
+- `data/raw/insar/README.md` — credential setup guide (NASA Earthdata Login)
+  and the end-to-end workflow from credential export to processed features.
+- `docs/04-methods.md` §3.2 expanded with the precise feature definitions and
+  citations to Grebby 2021 and Carla 2019.
+
 ### Added (2026-05-21, third push)
 - `data/` reorganised into a self-contained, reproducible data layer:
   - `data/README.md` is the new navigation key with a tree diagram, pipeline
