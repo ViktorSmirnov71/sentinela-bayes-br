@@ -34,14 +34,36 @@ function project(lon, lat) {
   };
 }
 
-// Light-mode risk ramp: teal -> deep violet -> magenta. Saturated enough to
-// pop against the pale background; no glow / bloom needed.
+// Light-mode risk ramp: vibrant teal -> deep purple -> crimson-pink.
+// Hand-tuned to pop against a warm-tan-to-brown terrain palette.
 function riskColour(t /* 0..1, higher = riskier */) {
-  const c0 = new THREE.Color(0x00a896);
-  const c1 = new THREE.Color(0x6b3aa0);
-  const c2 = new THREE.Color(0xc8186c);
+  const c0 = new THREE.Color(0x0ea5a4);   // teal
+  const c1 = new THREE.Color(0x6d28d9);   // violet
+  const c2 = new THREE.Color(0xdb2777);   // rose
   if (t < 0.5) return c0.clone().lerp(c1, t * 2);
   return c1.clone().lerp(c2, (t - 0.5) * 2);
+}
+
+// Hypsometric (elevation -> colour) ramp for the terrain itself. Five stops
+// from pale cool blue-grey at sea level through sandy tan to a darker
+// terracotta at the highest peaks. Reads as a real topographic map.
+function terrainColour(t /* 0..1, normalised elevation */) {
+  const stops = [
+    { p: 0.00, c: new THREE.Color(0xd9e2eb) },   // sea level / coastal lowland
+    { p: 0.12, c: new THREE.Color(0xe1ddc7) },   // low plain
+    { p: 0.30, c: new THREE.Color(0xd6c294) },   // savannah / plateau
+    { p: 0.55, c: new THREE.Color(0xb89968) },   // highland
+    { p: 0.85, c: new THREE.Color(0x8a6a48) },   // dark highland
+    { p: 1.00, c: new THREE.Color(0x5e4633) },   // peak
+  ];
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (t <= stops[i + 1].p) {
+      const span = stops[i + 1].p - stops[i].p;
+      const local = span > 0 ? (t - stops[i].p) / span : 0;
+      return stops[i].c.clone().lerp(stops[i + 1].c, local);
+    }
+  }
+  return stops[stops.length - 1].c.clone();
 }
 
 // ---------- scene setup ----------
@@ -70,7 +92,7 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 composer.addPass(new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
-  /* strength */ 0.22, /* radius */ 0.55, /* threshold */ 0.55
+  /* strength */ 0.45, /* radius */ 0.5, /* threshold */ 0.7
 ));
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -108,20 +130,23 @@ const colours = new Float32Array(positions.count * 3);
 const elevMin = terrain.elev_min_m;
 const elevMax = terrain.elev_max_m;
 
+// Re-stretch elevation against the 1st..99th percentile so a single noisy
+// 5713m pixel near the Andes border doesn't compress all real Brazilian
+// terrain into the bottom 10% of the colour ramp.
+const sorted = [...elev].sort((a, b) => a - b);
+const stretchLo = sorted[Math.floor(sorted.length * 0.01)];
+const stretchHi = sorted[Math.floor(sorted.length * 0.99)];
+const stretchSpan = Math.max(1, stretchHi - stretchLo);
+
 for (let i = 0; i < positions.count; i++) {
   const e = elev[i];
   const y = e * ELEV_TO_WORLD;
   positions.setY(i, y);
-  // Light-mode terrain palette: pale grey-blue lowland -> slightly warmer
-  // tan-grey highland. Subtle enough to remain background; rich enough to
-  // reveal Brazilian highland structure.
-  const t = Math.min(1, Math.max(0, (e - elevMin) / (elevMax - elevMin + 1e-6)));
-  const r = 0.84 + 0.05 * t;
-  const g = 0.86 + 0.02 * t;
-  const b = 0.88 - 0.10 * t;
-  colours[i * 3 + 0] = r;
-  colours[i * 3 + 1] = g;
-  colours[i * 3 + 2] = b;
+  const t = Math.min(1, Math.max(0, (e - stretchLo) / stretchSpan));
+  const c = terrainColour(t);
+  colours[i * 3 + 0] = c.r;
+  colours[i * 3 + 1] = c.g;
+  colours[i * 3 + 2] = c.b;
 }
 positions.needsUpdate = true;
 terrainGeo.computeVertexNormals();
@@ -137,18 +162,36 @@ const terrainMat = new THREE.MeshStandardMaterial({
 const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
 scene.add(terrainMesh);
 
-// Topographic wireframe overlay — darker grey for legibility on a light bg.
+// Topographic wireframe overlay. Dark slate at 32% so the triangulation is
+// genuinely visible against the warm terrain palette — this is the "grid"
+// look that was missing in the first light-mode pass.
 const wireGeo = terrainGeo.clone();
 const wireMat = new THREE.MeshBasicMaterial({
-  color: 0x5a6878,
+  color: 0x1f2937,
   wireframe: true,
   transparent: true,
-  opacity: 0.10,
+  opacity: 0.32,
   depthWrite: false,
 });
 const wireMesh = new THREE.Mesh(wireGeo, wireMat);
-wireMesh.position.y = 0.04;
+wireMesh.position.y = 0.05;
 scene.add(wireMesh);
+
+// Ground-level reference grid — a 1° lat/lon spacing in the world plane,
+// at y = 0, so even from a steep top-down angle there is a clean cartographic
+// reference under the terrain.
+{
+  const gridSize = Math.max(PLANE_W, PLANE_H);
+  const grid = new THREE.GridHelper(
+    gridSize, 45,           // 45 divisions ≈ 1° spacing along the long axis
+    0x9aa6b4,               // major-axis colour
+    0xc6cdd5,               // minor-axis colour
+  );
+  grid.material.transparent = true;
+  grid.material.opacity = 0.45;
+  grid.position.y = -0.01;
+  scene.add(grid);
+}
 
 // Helper: sample interpolated terrain elevation in world units at a (lon, lat).
 function sampleTerrainY(lon, lat) {
@@ -206,8 +249,8 @@ for (const dam of dams) {
   const mat = new THREE.MeshStandardMaterial({
     color: colour,
     emissive: colour,
-    emissiveIntensity: 0.15 + 0.6 * tRisk,   // subtle glow on high-risk only
-    roughness: 0.35,
+    emissiveIntensity: 0.35 + 1.2 * tRisk,
+    roughness: 0.45,
     metalness: 0.05,
   });
   const mesh = new THREE.Mesh(spikeGeo, mat);
