@@ -397,7 +397,61 @@ failure. It quantifies what's missing from our pipeline (PSI processing,
 atmospheric correction, multi-reference de-trending) and pushes those
 items to the top of the methodology backlog.
 
-## 5.5 Visualisation
+## 5.5 Brumadinho B1 retrospective: a partial-precursor hit
+
+A second HyP3 batch was submitted at the Brumadinho B1 dam coordinates
+(-20.117, -44.123) over 2018-01 to 2019-01. The 2018 era covers both
+Sentinel-1A and S1B operations, so the bbox + window yielded 66 scenes
+(vs. 16 for Fundão's earlier-mission window), and 192 SBAS jobs were
+submitted at three-temporal-neighbour density.
+
+**Methodology finding during submission.** 128 of 192 jobs failed at
+HyP3 with 100 % correspondence between failure and cross-relative-orbit
+pairing. Sentinel-1 has many tracks that overlap a small bbox, and pairs
+across tracks exceed the InSAR coherence baseline limit. We patched
+`short_baseline_pairs` to group by `pathNumber` before forming pairs;
+all future submissions group correctly. The 64 succeeded pairs are
+sufficient for a retrospective; the patch commit hash is
+[`9fa0bbb`](https://github.com/ViktorSmirnov71/sentinela-bayes-br/commit/9fa0bbb).
+
+**Trajectory.** With the rolling-window pipeline of §5.4 applied to the
+64-pair B1 dataset, Sentinela's predicted 12-month failure probability
+through 2018 evolves as follows (`figures/b1_brumadinho_retrospective.png`):
+
+| month  | n_obs | risk_12m | notes |
+|--------|------:|---------:|-------|
+| 2018-01 |  3 | 0.42 % | engineering baseline; too-sparse window |
+| 2018-02 |  8 | 0.09 % | early-window noise |
+| 2018-03 | 13 | 0.09 % | early-window noise |
+| **2018-04** | **18** | **1.86 %** | **spike within Grebby's first risk milestone** |
+| 2018-05 | 23 | 0.57 % |  |
+| 2018-06 | 28 | 0.35 % | drift downward |
+| 2018-07 | 33 | 0.13 % |  |
+| 2018-08 | 39 | 0.22 % |  |
+| 2018-09 | 43 | 0.26 % |  |
+| 2018-10 | 49 | 0.28 % |  |
+| 2018-11 | 54 | 0.23 % |  |
+| 2018-12 | 59 | 0.20 % |  |
+| **2019-01** | 61 | **0.26 %** | collapse month |
+
+@grebby2021 identified two risk milestones for B1: a "definitive but
+emergent" window Feb–Aug 2018, and an "imminent risk of collapse"
+window Jun–Dec 2018. Our 2018-04 spike of 1.86 % falls squarely within
+the first window — a partial retrospective replication. The model does
+not, however, surface the second imminent-risk window; risk drops to
+baseline through summer/autumn 2018 and the collapse month carries only
+0.26 %.
+
+This is a meaningful partial result: the pipeline runs end-to-end on
+the canonical reference failure, produces a precursor flag in the
+expected calendar quarter, but does not sustain the signal through the
+second flagged window. As at Fundão, the limiting factor is the
+sampling sophistication of our LOS time series — single-pixel-median
+sampling against a 3 km reference cannot reproduce the PS-InSAR
+multi-reference processing Grebby used. Future iterations with MintPy
+will revisit both retrospectives.
+
+## 5.6 Visualisation
 
 A self-contained Three.js visualisation is shipped at `viz/index.html`:
 877 geocoded dams are rendered as glowing pillars over a simplified

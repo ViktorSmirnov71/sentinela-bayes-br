@@ -8,6 +8,25 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-22 — Brumadinho B1 retrospective + methodology finding)
+- Second HyP3 retrospective batch: `sentinela-b1-brumadinho` at the actual
+  B1 dam coordinates (-20.117, -44.123) over 2018-01 to 2019-01. 192 jobs
+  submitted; 64 succeeded, 128 failed.
+- **Methodology finding (pushed pre-results as `9fa0bbb`):** 100% of B1
+  failures were cross-relative-orbit SBAS pairs. `short_baseline_pairs`
+  now groups by `pathNumber` before pairing — future submissions avoid
+  this entirely.
+- `experiments/03_b1_brumadinho_retrospective/`: rolling-window experiment
+  adapted from 02; produces `figures/b1_brumadinho_retrospective.png` and
+  `results/03_b1_brumadinho_retrospective/trajectory.csv`.
+- **Result.** Trajectory shows a 1.86% risk spike in April 2018 that
+  falls squarely within Grebby 2021's "definitive but emergent risk"
+  window for B1 (Feb-Aug 2018). The model does not surface the second
+  imminent-risk window (Jun-Dec 2018) and the collapse month itself
+  carries only 0.26%. Reported as a partial retrospective hit in
+  paper §5.5; consistent with the §5.4 Fundão finding about sampler
+  sophistication being the bottleneck.
+
 ### Added (2026-05-21, ninth push — Fundão retrospective)
 - Second HyP3 batch submitted, processed, and downloaded at the actual
   Fundão dam coordinates (-20.193, -43.493). 42 SBAS pairs, 0 failures,
