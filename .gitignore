@@ -52,3 +52,6 @@ results/
 .coverage
 htmlcov/
 .ruff_cache/
+
+# Regenerable Overleaf bundle
+paper/sentinela_overleaf.zip
