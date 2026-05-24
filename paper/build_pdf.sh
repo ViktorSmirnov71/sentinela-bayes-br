@@ -43,9 +43,11 @@ awk '
 # Latin Modern (xelatex default) lacks a few Unicode math glyphs in TEXT mode.
 # Wrap them in math mode in the build copy so the math font renders them.
 # manuscript.md keeps the nice Unicode for GitHub rendering.
-python3 - "$BUILD" <<'PY'
-import sys, re, pathlib
-p = pathlib.Path(sys.argv[1]); t = p.read_text()
+python3 - "$BUILD" "$REPO" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); repo = sys.argv[2]; t = p.read_text()
+# Resolve GitHub-relative image paths to absolute for the pandoc build.
+t = t.replace("](../figures/", f"]({repo}/figures/")
 for u, m in [("≥", r"$\geq$"), ("≤", r"$\leq$"), ("≈", r"$\approx$"),
              ("α", r"$\alpha$"), ("σ", r"$\sigma$"), ("²", r"$^2$")]:
     t = t.replace(u, m)

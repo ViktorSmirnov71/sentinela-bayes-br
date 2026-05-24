@@ -8,6 +8,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-24 — hero 3D figure)
+- `paper/make_figures.py::fig0_hero`: two-panel hero 3D render — (A) the
+  national failure-risk field over Brazil's terrain, (B) a labelled zoom
+  into the Minas Gerais iron-ore corridor (Fundão/Germano complex, Serra
+  Azul Emergency-Level-3, Forquilha cluster). `figures/fig0_hero.png`.
+- Hero figure placed at the top of the manuscript, above the abstract, to
+  open the paper visually. PDF rebuilt to 1.8 MB (18 pages).
+- `paper/build_pdf.sh` resolves GitHub-relative image paths to absolute
+  for the pandoc build, so `manuscript.md` keeps clean relative paths.
+
 ### Added (2026-05-24 — complete paper release)
 - `paper/make_figures.py`: generates the full publication figure set
   (cohort composition, prior-vs-posterior rates, top-20 ranking, static

@@ -126,6 +126,96 @@ def fig3_top_risk_ranking() -> None:
     print("wrote fig3_top_risk_ranking.png")
 
 
+def _load_terrain_grid(step: int = 2):
+    terrain = json.loads((VIZ / "terrain.json").read_text())
+    W, H = terrain["width"], terrain["height"]
+    elev = np.asarray(terrain["elevation_m"], dtype=float).reshape(H, W)
+    elev_s = elev[::step, ::step]
+    hh, ww = elev_s.shape
+    lon = np.linspace(terrain["lon_min"], terrain["lon_max"], ww)
+    lat = np.linspace(terrain["lat_max"], terrain["lat_min"], hh)
+    LON, LAT = np.meshgrid(lon, lat)
+    return terrain, LON, LAT, elev_s
+
+
+def fig0_hero() -> None:
+    """Two-panel 'hero' 3D render for the top of the paper:
+       (A) dramatic full-Brazil risk field, (B) labelled Minas Gerais zoom."""
+    dams = json.loads((VIZ / "dams.json").read_text())
+    _terr, LON, LAT, ELEV = _load_terrain_grid(step=2)
+    max_risk = max(d["risk_12m"] for d in dams)
+
+    fig = plt.figure(figsize=(15, 7.5), facecolor="white")
+
+    # ---------- Panel A: full Brazil, dramatic oblique ----------
+    axA = fig.add_subplot(1, 2, 1, projection="3d", computed_zorder=False)
+    axA.plot_surface(LON, LAT, ELEV, cmap="gist_earth", linewidth=0,
+                     antialiased=True, alpha=0.75, rstride=1, cstride=1)
+    spike_scale = 5000.0 / max_risk
+    for d in dams:
+        if d["risk_12m"] < max_risk * 0.05:
+            continue
+        z0 = d["terrain_elevation_m"]
+        z1 = z0 + d["risk_12m"] * spike_scale
+        t = (d["risk_12m"] / max_risk) ** 0.45
+        colour = ROSE if t > 0.6 else VIOLET if t > 0.3 else TEAL
+        axA.plot([d["lon"], d["lon"]], [d["lat"], d["lat"]], [z0, z1],
+                 color=colour, lw=1.3, alpha=0.92, zorder=5)
+        axA.scatter([d["lon"]], [d["lat"]], [z1], color=colour, s=6, zorder=6)
+    axA.set_title("(A) National failure-risk field", fontsize=12, fontweight="bold", pad=0)
+    axA.set_xlabel("lon", fontsize=8)
+    axA.set_ylabel("lat", fontsize=8)
+    axA.set_zlabel("elevation + risk (m)", fontsize=8)
+    axA.view_init(elev=28, azim=-62)
+    axA.tick_params(labelsize=7)
+
+    # ---------- Panel B: Minas Gerais zoom, labelled ----------
+    axB = fig.add_subplot(1, 2, 2, projection="3d", computed_zorder=False)
+    # MG window around the iron-ore corridor.
+    lon_lo, lon_hi, lat_lo, lat_hi = -45.0, -42.5, -21.0, -19.0
+    # Build a sub-grid by cropping rows/cols that fall in range.
+    col_ok = np.where((LON[0, :] >= lon_lo) & (LON[0, :] <= lon_hi))[0]
+    row_ok = np.where((LAT[:, 0] >= lat_lo) & (LAT[:, 0] <= lat_hi))[0]
+    if len(col_ok) > 2 and len(row_ok) > 2:
+        r0, r1, c0, c1 = row_ok[0], row_ok[-1] + 1, col_ok[0], col_ok[-1] + 1
+        axB.plot_surface(LON[r0:r1, c0:c1], LAT[r0:r1, c0:c1], ELEV[r0:r1, c0:c1],
+                         cmap="gist_earth", linewidth=0, antialiased=True,
+                         alpha=0.7, rstride=1, cstride=1)
+    mg = [d for d in dams if lon_lo <= d["lon"] <= lon_hi and lat_lo <= d["lat"] <= lat_hi]
+    mg.sort(key=lambda d: -d["risk_12m"])
+    spike_scale_b = 2500.0 / max_risk
+    label_targets = {"Barragem de Germano": "Fundão complex (Germano)",
+                     "Forquilha I": "Forquilha cluster",
+                     "Barragem Serra Azul": "Serra Azul (Emerg. L3)"}
+    for d in mg:
+        z0 = d["terrain_elevation_m"]
+        z1 = z0 + d["risk_12m"] * spike_scale_b
+        t = (d["risk_12m"] / max_risk) ** 0.45
+        colour = ROSE if t > 0.6 else VIOLET if t > 0.3 else TEAL
+        axB.plot([d["lon"], d["lon"]], [d["lat"], d["lat"]], [z0, z1],
+                 color=colour, lw=1.6, alpha=0.95, zorder=5)
+        axB.scatter([d["lon"]], [d["lat"]], [z1], color=colour, s=12, zorder=6)
+        if d["name"] in label_targets:
+            axB.text(d["lon"], d["lat"], z1 + 250, label_targets[d["name"]],
+                     fontsize=8, fontweight="bold", color=SLATE, zorder=7)
+    axB.set_title("(B) Minas Gerais iron-ore corridor", fontsize=12, fontweight="bold", pad=0)
+    axB.set_xlabel("lon", fontsize=8)
+    axB.set_ylabel("lat", fontsize=8)
+    axB.set_zlabel("elevation + risk (m)", fontsize=8)
+    axB.view_init(elev=30, azim=-58)
+    axB.tick_params(labelsize=7)
+
+    fig.suptitle(
+        "Sentinela — predicted 12-month tailings-dam failure-risk field over Brazil\n"
+        "spike height scales with failure probability · teal-violet-magenta by risk decile · 877 active dams",
+        fontsize=13, fontweight="bold",
+    )
+    fig.tight_layout(rect=[0, 0, 1, 0.92])
+    fig.savefig(FIG / "fig0_hero.png", dpi=170, facecolor="white")
+    plt.close(fig)
+    print("wrote fig0_hero.png")
+
+
 def fig4_terrain_3d() -> None:
     """Static 3D render of the terrain surface with risk spikes — a paper
     still of the interactive viz."""
@@ -235,6 +325,7 @@ def fig6_insar_comparison() -> None:
 
 def main() -> int:
     FIG.mkdir(exist_ok=True)
+    fig0_hero()
     fig1_cohort_composition()
     fig2_posterior_rates()
     fig3_top_risk_ranking()
