@@ -32,9 +32,11 @@
 \setkeys{Gin}{width=\linewidth,keepaspectratio}
 
 % --- section styling ---
+% Headers use the same serif body font (bold) so the paper is typographically
+% consistent throughout — no sans/serif split.
 \usepackage{titlesec}
-\titleformat{\section}{\large\bfseries\sffamily}{\thesection}{0.6em}{}
-\titleformat{\subsection}{\normalsize\bfseries\sffamily}{\thesubsection}{0.6em}{}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.6em}{}
 \titlespacing*{\section}{0pt}{1.4ex plus 1ex minus .2ex}{0.8ex plus .2ex}
 
 % --- abstract a touch narrower for a journal feel ---
@@ -44,8 +46,8 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\footnotesize\sffamily Sentinela}
-\fancyhead[R]{\footnotesize\sffamily Forecasting Brazil's Next Tailings-Dam Disaster}
+\fancyhead[L]{\footnotesize Sentinela}
+\fancyhead[R]{\footnotesize Forecasting Brazil's Next Tailings-Dam Disaster}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.3pt}
 
