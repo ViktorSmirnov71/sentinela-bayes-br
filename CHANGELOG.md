@@ -8,6 +8,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-24 — dedicated title page)
+- `paper/titlepage.tex`: a proper `titlepage` environment — 30pt bold
+  title header, italic subtitle, a RoyalBlue rule, the hero 3D figure
+  with caption, author/affiliation/date, and the repo link in the footer.
+- Injected via pandoc `--include-before-body`; the YAML frontmatter is now
+  stripped entirely in the build so pandoc emits no competing `\maketitle`.
+  The hero image moved off the abstract page onto the title page.
+- `build_latex.sh` and `make_overleaf_bundle.sh` updated accordingly
+  (the bundle rewrites the title page's `../figures/` path to `figures/`).
+- PDF now opens with a clean cover page (19 pages total).
+
 ### Added (2026-05-24 — native LaTeX build)
 - `paper/preamble.tex`: LaTeX preamble (TeX Gyre Pagella/Heros fonts via
   fontspec, booktabs, titlesec section styling, fancyhdr headers,

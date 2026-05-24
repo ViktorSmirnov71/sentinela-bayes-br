@@ -33,6 +33,7 @@ import sys, pathlib
 src, repo, dst = sys.argv[1], sys.argv[2], sys.argv[3]
 t = pathlib.Path(src).read_text()
 t = t.replace(f"{repo}/figures/", "figures/")
+t = t.replace("../figures/", "figures/")   # title-page hero path
 pathlib.Path(dst).write_text(t)
 PY
 

@@ -9,8 +9,6 @@ keywords:
   - tailings dams; Brumadinho; Sentinel-1 InSAR; Bayesian inference; survival analysis; calibrated probability
 ---
 
-![Sentinela predicted 12-month tailings-dam failure-risk field over Brazil. (A) national view; (B) Minas Gerais iron-ore corridor with the reference-failure complexes labelled. Spike height scales with predicted failure probability; colour runs teal→violet→magenta by risk decile.](../figures/fig0_hero.png){ width=100% }
-
 # Abstract
 
 Catastrophic failure of mine-tailings storage facilities (TSFs) in Brazil

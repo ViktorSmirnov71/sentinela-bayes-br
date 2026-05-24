@@ -16,11 +16,15 @@ REPO="$(cd "$PAPER_DIR/.." && pwd)"
 BUILD="$PAPER_DIR/_build_manuscript.md"
 TEX="$PAPER_DIR/manuscript.tex"
 
-# --- assemble build copy: strip keywords, append figure gallery + tables ---
+# --- assemble build copy ---
+# Drop the entire YAML frontmatter so pandoc does NOT emit its own
+# \maketitle (we supply a custom title page via --include-before-body).
 awk '
-  /^keywords:/ {skip=1; next}
-  skip && /^  - / {skip=0; next}
-  {skip=0; print}
+  BEGIN {infm=0; seen=0}
+  NR==1 && $0=="---" {infm=1; seen=1; next}
+  infm && $0=="---" {infm=0; next}
+  infm {next}
+  {print}
 ' "$PAPER_DIR/manuscript.md" > "$BUILD"
 
 {
@@ -50,6 +54,7 @@ pandoc "$BUILD" \
   --from=markdown+tex_math_dollars+pipe_tables \
   --to=latex \
   --include-in-header="$PAPER_DIR/preamble.tex" \
+  --include-before-body="$PAPER_DIR/titlepage.tex" \
   --toc --toc-depth=2 \
   -V documentclass=article \
   -V classoption=11pt \
