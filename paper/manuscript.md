@@ -1,8 +1,9 @@
 ---
-title: "Sentinela: a calibrated hierarchical-Bayesian forecaster for Brazilian mine-tailings dam failures"
+title: "Forecasting Brazil's Next Tailings-Dam Disaster"
+subtitle: "Sentinela: a calibrated hierarchical-Bayesian forecaster for Brazilian mine-tailings dam failures"
 authors:
   - Viktor Smirnov, Arakon
-date: 2026-05-21
+date: 2026-05-24
 status: pre-print, manuscript draft
 keywords:
   - tailings dams; Brumadinho; Sentinel-1 InSAR; Bayesian inference; survival analysis; calibrated probability
