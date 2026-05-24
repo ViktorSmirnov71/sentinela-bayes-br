@@ -8,6 +8,25 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-24 — complete paper release)
+- `paper/make_figures.py`: generates the full publication figure set
+  (cohort composition, prior-vs-posterior rates, top-20 ranking, static
+  3D terrain+risk render, dual retrospective trajectories with Grebby
+  windows, InSAR LOS-velocity comparison). 6 figures into `figures/`.
+- `paper/make_tables.py`: 5 publication tables as CSV + a combined
+  `paper/tables/tables.md` (cohort summary, posterior rates, top-15
+  ranking, retrospective comparison, model structure).
+- `paper/build_pdf.sh`: assembles a build copy with figure gallery +
+  tables appendix, fixes Unicode-glyph and XMP-metadata issues, and
+  builds via pandoc + xelatex to `paper/manuscript.pdf` (18 pages, 1.1 MB).
+- Manuscript finalised: figure/table references woven through §3–§5, a
+  new §5.6 visualisation note pointing at the 3D render, an emergency-
+  declaration external-validation paragraph in §5.2 (the country's single
+  Emergency-Level-3 dam and the full Level-2 Forquilha cluster appear in
+  the model's engineering-only top-15), a rewritten abstract reporting the
+  three headline results, and a new §9 Conclusion. Stale "in progress"
+  phrasing replaced with final results.
+
 ### Added (2026-05-22 — Brumadinho B1 retrospective + methodology finding)
 - Second HyP3 retrospective batch: `sentinela-b1-brumadinho` at the actual
   B1 dam coordinates (-20.117, -44.123) over 2018-01 to 2019-01. 192 jobs

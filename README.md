@@ -102,7 +102,12 @@ pytest -q
 
 ## How to read this repository
 
-- `paper/manuscript.md`: full IMRaD draft of the research paper.
+- `paper/manuscript.pdf`: **the built 18-page research paper** with all
+  figures and tables. Rebuild with `bash paper/build_pdf.sh`.
+- `paper/manuscript.md`: source of the paper (full IMRaD).
+- `figures/`: the six publication figures (regenerate with
+  `python paper/make_figures.py`).
+- `paper/tables/`: the five publication tables as CSV + `tables.md`.
 - `viz/index.html`: Three.js 3D ghost map of every Brazilian mining dam,
   pillar height proportional to the model's predicted 12-month failure
   probability. See `viz/README.md` for how to launch.

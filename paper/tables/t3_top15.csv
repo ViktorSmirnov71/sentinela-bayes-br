@@ -1,0 +1,16 @@
+dam_id,name,operator_name,state,construction_method,height_m,emergency_level,risk_12m_pct
+8765,Barragem de Germano,SAMARCO MINERACAO S.A. EM RE,MG,upstream,163.0,0,1.595
+8332,Pontal,VALE S.A.,MG,upstream,69.9,1,1.143
+9533,ED Monjolo,VALE S.A.,MG,upstream,145.0,0,0.879
+9532,ED Vale das Cobras,VALE S.A.,MG,upstream,122.4,0,0.635
+8431,Barragem Eustáquio,KINROSS BRASIL MINERACAO S/A,MG,centerline,114.0,0,0.632
+8286,Forquilha II,VALE S.A.,MG,upstream,94.3,2,0.615
+8283,Forquilha I,VALE S.A.,MG,upstream,94.44,2,0.587
+8290,Forquilha III,VALE S.A.,MG,upstream,77.0,2,0.464
+8955,Barragem Serra Azul,ARCELORMITTAL BRASIL S.A.,MG,upstream,80.1,3,0.453
+8389,Sul Superior,VALE S.A.,MG,upstream,75.5,2,0.422
+9534,Xingu,VALE S.A.,MG,upstream,72.0,1,0.406
+8209,Campo Grande,VALE S.A.,MG,upstream,93.98,0,0.406
+9320,Barragem B2 - Mina Tico-Tico,MINERACAO MORRO DO IPE S.A.,MG,upstream,86.0,0,0.399
+8291,Barragem MSG,MINERACAO SERRA GRANDE S A,GO,upstream,92.0,0,0.388
+8207,Doutor,VALE S.A.,MG,upstream,79.98,0,0.342

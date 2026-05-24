@@ -1,0 +1,6 @@
+level,mechanism,bound,data_source
+0 prior,literature base rate (Rana 2021 / Bowker-Chambers),—,literature
+1 construction,Beta-Binomial posterior per construction method,—,SIGBM + WMTF labels
+2 operator,James-Stein shrunk per-operator logit shift,±1.0 logit,SIGBM + labels
+3 engineering,"bounded logit shifts: height, volume, age, CRI",0.10–0.30 per z,SIGBM static fields
+4 InSAR,"bounded logit shifts: LOS velocity, accel, spectral slope, variance ratio",±1.5 logit total,Sentinel-1 HyP3 InSAR

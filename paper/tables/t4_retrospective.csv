@@ -1,0 +1,3 @@
+event,collapse_date,insar_pairs,max_risk_pct,collapse_month_risk_pct,peak_month,matches_grebby_window
+Fundão (Samarco),2015-11-05,42,3.27,0.96,2015-06,n/a (Fundão not in Grebby)
+Brumadinho B1 (Vale),2019-01-25,61,1.86,0.26,2018-04,yes (peak in milestone-1)
