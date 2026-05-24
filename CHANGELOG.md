@@ -8,6 +8,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Added (2026-05-24 — native LaTeX build)
+- `paper/preamble.tex`: LaTeX preamble (TeX Gyre Pagella/Heros fonts via
+  fontspec, booktabs, titlesec section styling, fancyhdr headers,
+  newunicodechar math-glyph coverage, coloured hyperref links).
+- `paper/build_latex.sh`: converts `manuscript.md` to a **standalone,
+  editable** `manuscript.tex` via pandoc (preamble injected), then compiles
+  twice with xelatex to resolve TOC + refs. Now the primary build path.
+- `paper/manuscript.tex`: generated 1,307-line standalone LaTeX source,
+  committed and editable. The Markdown remains the authoring source;
+  the .tex is the formatting layer.
+- `manuscript.pdf` rebuilt via the LaTeX path: 20 pages, 2.1 MB, richer
+  Pagella typography, running headers, formatted booktabs tables.
+- `paper/README.md` rewritten with the LaTeX build instructions and notes
+  on editing the .tex directly / switching to two-column.
+
 ### Added (2026-05-24 — hero 3D figure)
 - `paper/make_figures.py::fig0_hero`: two-panel hero 3D render — (A) the
   national failure-risk field over Brazil's terrain, (B) a labelled zoom

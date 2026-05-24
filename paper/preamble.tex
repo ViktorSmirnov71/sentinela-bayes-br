@@ -1,0 +1,54 @@
+% Preamble for the Sentinela manuscript (xelatex).
+% Injected into the pandoc-generated standalone LaTeX via --include-in-header.
+% Gives the paper a clean single-column academic look with good typography,
+% booktabs tables, sensible figure defaults, and coloured hyperlinks.
+
+% --- fonts (xelatex) ---
+\usepackage{fontspec}
+\IfFontExistsTF{TeX Gyre Pagella}{\setmainfont{TeX Gyre Pagella}}{}
+\IfFontExistsTF{TeX Gyre Heros}{\setsansfont{TeX Gyre Heros}}{}
+\IfFontExistsTF{TeX Gyre Cursor}{\setmonofont{TeX Gyre Cursor}}{}
+\usepackage{microtype}
+
+% --- maths glyph coverage (so >=, <=, approx render in text) ---
+\usepackage{newunicodechar}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≈}{\ensuremath{\approx}}
+\newunicodechar{α}{\ensuremath{\alpha}}
+\newunicodechar{σ}{\ensuremath{\sigma}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{²}{\ensuremath{^{2}}}
+\newunicodechar{³}{\ensuremath{^{3}}}
+\newunicodechar{∝}{\ensuremath{\propto}}
+
+% --- tables / figures ---
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[font=small,labelfont=bf,skip=4pt]{caption}
+\setkeys{Gin}{width=\linewidth,keepaspectratio}
+
+% --- section styling ---
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries\sffamily}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries\sffamily}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{1.4ex plus 1ex minus .2ex}{0.8ex plus .2ex}
+
+% --- abstract a touch narrower for a journal feel ---
+\usepackage{changepage}
+
+% --- header / footer ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\sffamily Sentinela}
+\fancyhead[R]{\footnotesize\sffamily Forecasting Brazil's Next Tailings-Dam Disaster}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+
+% Tighten list spacing.
+\usepackage{enumitem}
+\setlist{itemsep=2pt, topsep=3pt}
