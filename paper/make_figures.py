@@ -138,6 +138,50 @@ def _load_terrain_grid(step: int = 2):
     return terrain, LON, LAT, elev_s
 
 
+def fig_cover() -> None:
+    """Minimalist cover render: a single axis-free 3D view of the national
+    risk field — terrain surface + glowing risk spikes, no gridlines, ticks,
+    labels, or in-figure text. Designed to sit cleanly on the title page."""
+    dams = json.loads((VIZ / "dams.json").read_text())
+    _terr, LON, LAT, ELEV = _load_terrain_grid(step=2)
+    max_risk = max(d["risk_12m"] for d in dams)
+
+    # Flatten the terrain into a gentle relief so the spikes are the focus,
+    # not the Andean foothills. Spikes are then scaled relative to the
+    # flattened base.
+    flat = 0.28
+    ELEVf = ELEV * flat
+    base_max = float(ELEVf.max())
+
+    fig = plt.figure(figsize=(11, 6.5), facecolor="white")
+    ax = fig.add_subplot(111, projection="3d", computed_zorder=False)
+    # Soft, near-uniform terrain in a pale cool grey so it recedes.
+    ax.plot_surface(LON, LAT, ELEVf, color="#c8d0d8", linewidth=0,
+                    antialiased=True, alpha=0.45, rstride=1, cstride=1,
+                    shade=True)
+    spike_scale = (base_max * 1.7) / max_risk
+    for d in dams:
+        if d["risk_12m"] < max_risk * 0.04:
+            continue
+        z0 = d["terrain_elevation_m"] * flat
+        z1 = z0 + d["risk_12m"] * spike_scale
+        t = (d["risk_12m"] / max_risk) ** 0.45
+        colour = ROSE if t > 0.6 else VIOLET if t > 0.3 else TEAL
+        ax.plot([d["lon"], d["lon"]], [d["lat"], d["lat"]], [z0, z1],
+                color=colour, lw=1.5, alpha=0.95, zorder=5,
+                solid_capstyle="round")
+        ax.scatter([d["lon"]], [d["lat"]], [z1], color=colour,
+                   s=11, zorder=6, edgecolors="none")
+    ax.set_axis_off()              # remove all panes / ticks / labels
+    ax.set_box_aspect((1.5, 1.5, 0.7))
+    ax.view_init(elev=26, azim=-60)
+    fig.subplots_adjust(left=0, right=1, bottom=0, top=1)
+    fig.savefig(FIG / "fig_cover.png", dpi=200, facecolor="white",
+                bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig)
+    print("wrote fig_cover.png")
+
+
 def fig0_hero() -> None:
     """Two-panel 'hero' 3D render for the top of the paper:
        (A) dramatic full-Brazil risk field, (B) labelled Minas Gerais zoom."""
@@ -325,6 +369,7 @@ def fig6_insar_comparison() -> None:
 
 def main() -> int:
     FIG.mkdir(exist_ok=True)
+    fig_cover()
     fig0_hero()
     fig1_cohort_composition()
     fig2_posterior_rates()

@@ -8,6 +8,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Changed (2026-05-24 — minimalist cover)
+- `paper/make_figures.py::fig_cover`: dedicated cover render — a single
+  axis-free 3D view of the national risk field with the terrain flattened
+  into a soft monochrome relief so the glowing risk spikes are the focal
+  point. No gridlines, ticks, labels, or in-figure text.
+- `paper/titlepage.tex` stripped to the essentials: title, a one-line
+  grey subtitle, the cover image, and a compact author/date line. Removed
+  the rule, the long figure caption, and the footer tagline/repo block.
+  Spacing tuned so the whole cover fits on one page.
+
 ### Added (2026-05-24 — dedicated title page)
 - `paper/titlepage.tex`: a proper `titlepage` environment — 30pt bold
   title header, italic subtitle, a RoyalBlue rule, the hero 3D figure

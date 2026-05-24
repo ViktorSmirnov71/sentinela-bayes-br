@@ -1,39 +1,24 @@
-% Custom title page, injected via pandoc --include-before-body.
-% The graphics path is relative to paper/ (where xelatex compiles); the
-% Overleaf bundle script rewrites ../figures/ -> figures/.
+% Minimalist cover page, injected via pandoc --include-before-body.
+% Graphics path is relative to paper/ (where xelatex compiles); the Overleaf
+% bundle script rewrites ../figures/ -> figures/.
 \begin{titlepage}
 \centering
-\vspace*{1.0cm}
+\vspace*{1.5cm}
 
-{\bfseries\fontsize{30}{36}\selectfont
-Forecasting Brazil's\\[2pt] Next Tailings-Dam Disaster\par}
+{\bfseries\fontsize{32}{38}\selectfont
+Forecasting Brazil's\\[3pt] Next Tailings-Dam Disaster\par}
 
-\vspace{0.7cm}
-{\large\itshape Sentinela --- a calibrated hierarchical-Bayesian forecaster\\
-for Brazilian mine-tailings dam failures\par}
-
-\vspace{0.5cm}
-{\color{RoyalBlue}\rule{0.82\linewidth}{1.2pt}\par}
+\vspace{0.6cm}
+{\large\color{Gray}\itshape calibrated failure forecasting for 877 mine-tailings dams\par}
 
 \vspace{0.9cm}
-\includegraphics[width=\linewidth]{../figures/fig0_hero.png}
-
-\vspace{0.5cm}
-{\footnotesize\itshape Predicted 12-month failure-risk field over Brazil's terrain.
-(A) national view; (B) Minas Gerais iron-ore corridor with the reference-failure
-complexes labelled. Spike height scales with failure probability; colour runs
-teal $\rightarrow$ violet $\rightarrow$ magenta by risk decile.\par}
+\includegraphics[width=0.72\linewidth]{../figures/fig_cover.png}
 
 \vfill
 
-{\large\bfseries Viktor Smirnov\par}
-{\normalsize Arakon\par}
-\vspace{0.3cm}
-{\normalsize 24 May 2026 \quad\textbullet\quad pre-print\par}
-
+{\large Viktor Smirnov\par}
+\vspace{0.12cm}
+{\small\color{Gray} Arakon \quad\textbullet\quad May 2026\par}
 \vspace{0.6cm}
-{\footnotesize\color{Gray}
-Open data \textbullet\ open code \textbullet\ reproducible from a clean clone\\
-\texttt{github.com/ViktorSmirnov71/sentinela-bayes-br}\par}
 
 \end{titlepage}
